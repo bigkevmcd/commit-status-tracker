@@ -1,0 +1,11 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: task-statuses
+subjects:
+- kind: ServiceAccount
+  name: task-statuses
+roleRef:
+  kind: Role
+  name: task-statuses
+  apiGroup: rbac.authorization.k8s.io
