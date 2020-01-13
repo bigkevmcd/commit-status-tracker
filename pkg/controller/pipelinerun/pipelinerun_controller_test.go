@@ -1,4 +1,4 @@
-package taskrun
+package pipelinerun
 
 import (
 	"testing"
@@ -15,38 +15,34 @@ import (
 )
 
 var (
-	namespace   = "test-namespace"
-	taskRunName = "test-task-run"
+	namespace       = "test-namespace"
+	pipelineRunName = "test-pipeline-run"
 )
 
-// TestTaskRunController runs ReconcileTaskRun.Reconcile() against a
+// TestPipelineRunController runs ReconcilePipelineRun.Reconcile() against a
 // fake client that tracks a Memcached object.
-func TestTaskRunController(t *testing.T) {
+func TestPipelineRunController(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 
-	taskRun := &pipelinev1.TaskRun{
+	pipelineRun := &pipelinev1.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      taskRunName,
+			Name:      pipelineRunName,
 			Namespace: namespace,
 		},
-		Spec: pipelinev1.TaskRunSpec{
-			Inputs: pipelinev1.TaskRunInputs{
-				Resources: []pipelinev1.TaskResourceBinding{
-					pipelinev1.TaskResourceBinding{
-						PipelineResourceBinding: pipelinev1.PipelineResourceBinding{
-							Name: "source",
-							ResourceSpec: &pipelinev1.PipelineResourceSpec{
-								Type: "git",
-								Params: []pipelinev1.ResourceParam{
-									pipelinev1.ResourceParam{
-										Name:  "revision",
-										Value: "master",
-									},
-									pipelinev1.ResourceParam{
-										Name:  "url",
-										Value: "https://github.com/GoogleContainerTools/skaffold",
-									},
-								},
+		Spec: pipelinev1.PipelineRunSpec{
+			Resources: []pipelinev1.PipelineResourceBinding{
+				pipelinev1.PipelineResourceBinding{
+					Name: "source",
+					ResourceSpec: &pipelinev1.PipelineResourceSpec{
+						Type: "git",
+						Params: []pipelinev1.ResourceParam{
+							pipelinev1.ResourceParam{
+								Name:  "revision",
+								Value: "master",
+							},
+							pipelinev1.ResourceParam{
+								Name:  "url",
+								Value: "https://github.com/GoogleContainerTools/skaffold",
 							},
 						},
 					},
@@ -55,17 +51,17 @@ func TestTaskRunController(t *testing.T) {
 		},
 	}
 	objs := []runtime.Object{
-		taskRun,
+		pipelineRun,
 	}
 
 	s := scheme.Scheme
-	s.AddKnownTypes(pipelinev1.SchemeGroupVersion, taskRun)
+	s.AddKnownTypes(pipelinev1.SchemeGroupVersion, pipelineRun)
 	cl := fake.NewFakeClient(objs...)
-	r := &ReconcileTaskRun{client: cl, scheme: s}
+	r := &ReconcilePipelineRun{client: cl, scheme: s}
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
-			Name:      taskRunName,
+			Name:      pipelineRunName,
 			Namespace: namespace,
 		},
 	}
