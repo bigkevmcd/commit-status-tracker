@@ -73,18 +73,26 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	if IsNotifiablePipelineRun(pipelineRun) {
-		res, err := FindGitResource(pipelineRun)
-		if err != nil {
-			reqLogger.Error(err, "failed to find a git resource")
-			return reconcile.Result{}, nil
-		} else {
-			reqLogger.Info("found a git resource", "resource", res)
-		}
-	} else {
+	if !IsNotifiablePipelineRun(pipelineRun) {
 		reqLogger.Info("not a notifable pipeline run")
+		return reconcile.Result{}, nil
+	}
+
+	status := GetStatus(pipelineRun)
+	if status == Pending {
+		reqLogger.Info("pipelineRun still pending")
+		return reconcile.Result{}, nil
+	}
+
+	res, err := FindGitResource(pipelineRun)
+	if err != nil {
+		reqLogger.Error(err, "failed to find a git resource")
+		return reconcile.Result{}, nil
+	} else {
+		reqLogger.Info("found a git resource", "resource", res)
 	}
 
 	// TODO: Create a GitHub status.
+	reqLogger.Info("creating a github status for", "resource", res, "status", status.String())
 	return reconcile.Result{}, nil
 }

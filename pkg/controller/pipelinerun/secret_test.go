@@ -35,7 +35,7 @@ func TestGetAuthSecretWithExistingToken(t *testing.T) {
 		t.Fatal(err)
 	}
 	if sec != testToken {
-		t.Fatalf("got %s, wanted %s", sec, testToken)
+		t.Fatalf("got %s, want %s", sec, testToken)
 	}
 }
 
@@ -46,9 +46,9 @@ func TestGetAuthSecretWithNoSecret(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	_, err := getAuthSecret(cl, getNamespaceSecretName(testNamespace))
 
-	wantedErr := "error getting secret test-namespace/github-auth.* not found"
-	if !matchError(t, wantedErr, err) {
-		t.Fatalf("failed to match error when no secret: got %s, wanted %s", err, wantedErr)
+	wantErr := "error getting secret test-namespace/github-auth.* not found"
+	if !matchError(t, wantErr, err) {
+		t.Fatalf("failed to match error when no secret: got %s, want %s", err, wantErr)
 	}
 }
 
@@ -69,9 +69,9 @@ func TestGetAuthSecretWithNoToken(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	_, err := getAuthSecret(cl, getNamespaceSecretName(testNamespace))
 
-	wantedErr := "secret .* does not have a 'token' key"
-	if !matchError(t, wantedErr, err) {
-		t.Fatalf("failed to match error when no secret: got %s, wanted %s", err, wantedErr)
+	wantErr := "secret .* does not have a 'token' key"
+	if !matchError(t, wantErr, err) {
+		t.Fatalf("failed to match error when no secret: got %s, want %s", err, wantErr)
 	}
 }
 

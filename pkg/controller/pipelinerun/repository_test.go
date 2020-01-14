@@ -24,7 +24,7 @@ func TestFindGitResourceWithRepository(t *testing.T) {
 	pipelineRun := makePipelineRunWithResources(
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 
-	wanted := &pipelinev1.PipelineResourceSpec{
+	want := &pipelinev1.PipelineResourceSpec{
 		Type: "git",
 		Params: []pipelinev1.ResourceParam{
 			pipelinev1.ResourceParam{
@@ -42,8 +42,8 @@ func TestFindGitResourceWithRepository(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(r, wanted) {
-		t.Fatalf("got %+v, wanted %+v", r, wanted)
+	if !reflect.DeepEqual(r, want) {
+		t.Fatalf("got %+v, want %+v", r, want)
 	}
 }
 
