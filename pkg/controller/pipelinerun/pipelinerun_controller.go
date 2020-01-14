@@ -31,7 +31,6 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
 	c, err := controller.New("pipelinerun-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
@@ -65,13 +64,25 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	reqLogger.Info("Reconciling PipelineRun")
 
 	// Fetch the PipelineRun instance
-	pipelineRun := pipelinesv1alpha1.PipelineRun{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, &pipelineRun)
+	pipelineRun := &pipelinesv1alpha1.PipelineRun{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, pipelineRun)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
 		return reconcile.Result{}, err
+	}
+
+	if IsNotifiablePipelineRun(pipelineRun) {
+		res, err := FindGitResource(pipelineRun)
+		if err != nil {
+			reqLogger.Error(err, "failed to find a git resource")
+			return reconcile.Result{}, nil
+		} else {
+			reqLogger.Info("found a git resource", "resource", res)
+		}
+	} else {
+		reqLogger.Info("not a notifable pipeline run")
 	}
 
 	// TODO: Create a GitHub status.

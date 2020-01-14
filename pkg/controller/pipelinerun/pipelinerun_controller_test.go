@@ -3,7 +3,7 @@ package pipelinerun
 import (
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	tb "github.com/tektoncd/pipeline/test/builder"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -20,36 +20,12 @@ var (
 )
 
 // TestPipelineRunController runs ReconcilePipelineRun.Reconcile() against a
-// fake client that tracks a Memcached object.
+// fake client that tracks PipelineRun objects.
 func TestPipelineRunController(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-
-	pipelineRun := &pipelinev1.PipelineRun{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      pipelineRunName,
-			Namespace: namespace,
-		},
-		Spec: pipelinev1.PipelineRunSpec{
-			Resources: []pipelinev1.PipelineResourceBinding{
-				pipelinev1.PipelineResourceBinding{
-					Name: "source",
-					ResourceSpec: &pipelinev1.PipelineResourceSpec{
-						Type: "git",
-						Params: []pipelinev1.ResourceParam{
-							pipelinev1.ResourceParam{
-								Name:  "revision",
-								Value: "master",
-							},
-							pipelinev1.ResourceParam{
-								Name:  "url",
-								Value: "https://github.com/GoogleContainerTools/skaffold",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	pipelineRun := makePipelineRunWithResources(
+		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	applyOpts(pipelineRun, tb.PipelineRunLabel(notifiable, "true"))
 	objs := []runtime.Object{
 		pipelineRun,
 	}
@@ -74,4 +50,34 @@ func TestPipelineRunController(t *testing.T) {
 		t.Fatal("reconcile requeued request")
 	}
 
+}
+
+// TestPipelineRunReconcileWithNoGitCredentials tests a non-notifable
+// PipelineRun.
+func TestPipelineRunReconcileNonNotifiable(t *testing.T) {
+	t.Skip()
+}
+
+// TestPipelineRunReconcileWithNoGitCredentials tests a notifable PipelineRun
+// with no "git" resource.
+func TestPipelineRunReconcileWithNoGitRepository(t *testing.T) {
+	t.Skip()
+}
+
+// TestPipelineRunReconcileWithNoGitCredentials tests a notifable PipelineRun
+// with multiple "git" resources.
+func TestPipelineRunReconcileWithGitRepositories(t *testing.T) {
+	t.Skip()
+}
+
+// TestPipelineRunReconcileWithNoGitCredentials tests a notifable PipelineRun
+// with a "git" resource, but with no Git credentials.
+func TestPipelineRunReconcileWithNoGitCredentials(t *testing.T) {
+	t.Skip()
+}
+
+func applyOpts(pr *pipelinev1.PipelineRun, opts ...tb.PipelineRunOp) {
+	for _, o := range opts {
+		o(pr)
+	}
 }

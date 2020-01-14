@@ -99,19 +99,16 @@ func main() {
 	}
 
 	log.Info("Registering Components.")
-
 	if err := pipelinev1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
 
-	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
 
-	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
@@ -121,8 +118,6 @@ func main() {
 	addMetrics(ctx, cfg, namespace)
 
 	log.Info("Starting the Cmd.")
-
-	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		log.Error(err, "Manager exited non-zero")
 		os.Exit(1)
