@@ -12,7 +12,7 @@ import (
 )
 
 func TestFindGitResourceWithNoRepository(t *testing.T) {
-	pipelineRun := makePipelineRun()
+	pipelineRun := makePipelineRunWithResources()
 
 	_, err := FindGitResource(pipelineRun)
 	if err == nil {
@@ -21,7 +21,7 @@ func TestFindGitResourceWithNoRepository(t *testing.T) {
 }
 
 func TestFindGitResourceWithRepository(t *testing.T) {
-	pipelineRun := makePipelineRun(
+	pipelineRun := makePipelineRunWithResources(
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 
 	wanted := &pipelinev1.PipelineResourceSpec{
@@ -48,7 +48,7 @@ func TestFindGitResourceWithRepository(t *testing.T) {
 }
 
 func TestFindGitResourceWithMultipleRepositories(t *testing.T) {
-	pipelineRun := makePipelineRun(
+	pipelineRun := makePipelineRunWithResources(
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
 		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
 
@@ -58,7 +58,17 @@ func TestFindGitResourceWithMultipleRepositories(t *testing.T) {
 	}
 }
 
-func makePipelineRun(opts ...tb.PipelineRunSpecOp) *pipelinev1.PipelineRun {
+func TestFindGitResourceWithNonGitResource(t *testing.T) {
+	pipelineRun := makePipelineRunWithResources(
+		makeImageResourceBinding("example.com/project/myimage"))
+
+	_, err := FindGitResource(pipelineRun)
+	if err == nil {
+		t.Fatal("did not get an error with no git resource")
+	}
+}
+
+func makePipelineRunWithResources(opts ...tb.PipelineRunSpecOp) *pipelinev1.PipelineRun {
 	return tb.PipelineRun("pear", "foo", tb.PipelineRunSpec(
 		"tomatoes", opts...,
 	), tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
@@ -80,6 +90,17 @@ func makeGitResourceBinding(url, rev string) tb.PipelineRunSpecOp {
 				Name:  "revision",
 				Value: rev,
 			}}}))
+}
+
+func makeImageResourceBinding(url string) tb.PipelineRunSpecOp {
+	return tb.PipelineRunResourceBinding("some-resource"+randomSuffix(),
+		tb.PipelineResourceBindingResourceSpec(&pipelinev1.PipelineResourceSpec{
+			Type: pipelinev1.PipelineResourceTypeImage,
+			Params: []pipelinev1.ResourceParam{{
+				Name:  "url",
+				Value: url,
+			},
+			}}))
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
