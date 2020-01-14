@@ -69,7 +69,7 @@ func TestFindGitResourceWithNonGitResource(t *testing.T) {
 }
 
 func makePipelineRunWithResources(opts ...tb.PipelineRunSpecOp) *pipelinev1.PipelineRun {
-	return tb.PipelineRun(pipelineRunName, namespace, tb.PipelineRunSpec(
+	return tb.PipelineRun(pipelineRunName, testNamespace, tb.PipelineRunSpec(
 		"tomatoes", opts...,
 	), tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 		apis.Condition{Type: apis.ConditionSucceeded}),

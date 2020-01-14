@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	namespace       = "test-namespace"
+	testNamespace   = "test-namespace"
 	pipelineRunName = "test-pipeline-run"
 )
 
@@ -38,7 +38,7 @@ func TestPipelineRunController(t *testing.T) {
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
 			Name:      pipelineRunName,
-			Namespace: namespace,
+			Namespace: testNamespace,
 		},
 	}
 	res, err := r.Reconcile(req)
