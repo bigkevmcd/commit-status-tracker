@@ -7,14 +7,18 @@ require (
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0 // indirect
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.8 // indirect
 	github.com/Azure/go-autorest v12.2.0+incompatible
+	github.com/hashicorp/go-multierror v1.0.0
+	github.com/jenkins-x/go-scm v1.5.66
 	github.com/operator-framework/operator-sdk v0.14.0
 	github.com/operator-framework/operator-sdk-samples/go/memcached-operator v0.0.0-20191231220446-839cfdbb2240 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/tektoncd/pipeline v0.9.2
+	go.uber.org/zap v1.10.0
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v12.0.0+incompatible
-	knative.dev/pkg v0.0.0-20200112024059-f72610ea731b // indirect
+	knative.dev/pkg v0.0.0-20200112024059-f72610ea731b
 	sigs.k8s.io/controller-runtime v0.4.0
 
 )
