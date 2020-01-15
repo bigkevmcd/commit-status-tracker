@@ -7,8 +7,8 @@ import (
 // isNotifiablePipelineRun returns true if this PipelineRun should report its
 // completion status as a GitHub status.
 func isNotifiablePipelineRun(pr *pipelinev1.PipelineRun) bool {
-	for k, v := range pr.Labels {
-		if k == notifiableLabel && v == "true" {
+	for k, v := range pr.Annotations {
+		if k == notifiableName && v == "true" {
 			return true
 		}
 	}

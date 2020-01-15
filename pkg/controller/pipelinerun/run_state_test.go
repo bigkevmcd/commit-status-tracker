@@ -3,11 +3,11 @@ package pipelinerun
 import (
 	"testing"
 
-	tb "github.com/tektoncd/pipeline/test/builder"
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
 
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tb "github.com/tektoncd/pipeline/test/builder"
 )
 
 func TestGetPipelineRunStatus(t *testing.T) {
@@ -26,7 +26,6 @@ func TestGetPipelineRunStatus(t *testing.T) {
 		if s != tt.want {
 			t.Errorf("getPipelineRunState(%s) got %v, want %v", tt.conditionStatus, s, tt.want)
 		}
-
 	}
 }
 

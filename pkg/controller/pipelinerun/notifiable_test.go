@@ -13,9 +13,9 @@ func TestIsNotifiablePipelineRun(t *testing.T) {
 		want bool
 	}{
 		{"no labels", nil, false},
-		{"no notifiable label", []tb.PipelineRunOp{tb.PipelineRunLabel("testing", "app")}, false},
-		{"notifiable label", []tb.PipelineRunOp{tb.PipelineRunLabel(notifiableLabel, "true")}, true},
-		{"notifiable label is false", []tb.PipelineRunOp{tb.PipelineRunLabel(notifiableLabel, "false")}, false},
+		{"no notifiable label", []tb.PipelineRunOp{tb.PipelineRunAnnotation("testing", "app")}, false},
+		{"notifiable label", []tb.PipelineRunOp{tb.PipelineRunAnnotation(notifiableName, "true")}, true},
+		{"notifiable label is false", []tb.PipelineRunOp{tb.PipelineRunAnnotation(notifiableName, "false")}, false},
 	}
 
 	for _, tt := range nt {

@@ -26,7 +26,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcilePipelineRun{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcilePipelineRun{client: mgr.GetClient(), scheme: mgr.GetScheme(), scmFactory: createClient}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -50,8 +50,9 @@ var _ reconcile.Reconciler = &ReconcilePipelineRun{}
 type ReconcilePipelineRun struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client     client.Client
+	scheme     *runtime.Scheme
+	scmFactory scmClientFactory
 }
 
 // Reconcile reads that state of the cluster for a PipelineRun object and makes changes based on the state read
@@ -73,18 +74,18 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	if !IsNotifiablePipelineRun(pipelineRun) {
+	if !isNotifiablePipelineRun(pipelineRun) {
 		reqLogger.Info("not a notifable pipeline run")
 		return reconcile.Result{}, nil
 	}
 
-	status := GetStatus(pipelineRun)
+	status := getPipelineRunState(pipelineRun)
 	if status == Pending {
 		reqLogger.Info("pipelineRun still pending")
 		return reconcile.Result{}, nil
 	}
 
-	res, err := FindGitResource(pipelineRun)
+	res, err := findGitResource(pipelineRun)
 	if err != nil {
 		reqLogger.Error(err, "failed to find a git resource")
 		return reconcile.Result{}, nil
@@ -92,7 +93,25 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		reqLogger.Info("found a git resource", "resource", res)
 	}
 
+	repo, sha, err := getRepoAndSHA(res)
+	if err != nil {
+		reqLogger.Error(err, "failed to parse the URL and SHA correctly")
+		return reconcile.Result{}, nil
+	} else {
+		reqLogger.Info("found a git resource", "resource", res)
+	}
+
 	// TODO: Create a GitHub status.
-	reqLogger.Info("creating a github status for", "resource", res, "status", status.String())
+	secret, err := getAuthSecret(r.client, request.Namespace)
+	if err != nil {
+		reqLogger.Error(err, "failed to get an authSecret")
+		return reconcile.Result{}, nil
+	}
+
+	client := r.scmFactory(secret)
+	commitStatusInput := getCommitStatusInput(pipelineRun)
+	reqLogger.Info("creating a github status for", "resource", res, "status", commitStatusInput)
+	s, _, err := client.Repositories.CreateStatus(context.Background(), repo, sha, commitStatusInput)
+	reqLogger.Info("created a github status", "status", s)
 	return reconcile.Result{}, nil
 }

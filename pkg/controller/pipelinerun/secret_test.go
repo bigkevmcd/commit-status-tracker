@@ -13,18 +13,8 @@ import (
 
 func TestGetAuthSecretWithExistingToken(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	testToken := "abcdefghijklmnopqrstuvwxyz12345678901234"
 
-	secret := &corev1.Secret{
-		Type: corev1.SecretTypeOpaque,
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: testNamespace,
-		},
-		Data: map[string][]byte{
-			"token": []byte(testToken),
-		},
-	}
+	secret := makeSecret(map[string][]byte{"token": []byte(testToken)})
 	objs := []runtime.Object{
 		secret,
 	}
@@ -72,6 +62,17 @@ func TestGetAuthSecretWithNoToken(t *testing.T) {
 	wantErr := "secret .* does not have a 'token' key"
 	if !matchError(t, wantErr, err) {
 		t.Fatalf("failed to match error when no secret: got %s, want %s", err, wantErr)
+	}
+}
+
+func makeSecret(data map[string][]byte) *corev1.Secret {
+	return &corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: testNamespace,
+		},
+		Data: data,
 	}
 }
 
