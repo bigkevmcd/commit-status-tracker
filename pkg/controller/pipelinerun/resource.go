@@ -29,3 +29,30 @@ func findGitResource(p *pipelinev1.PipelineRun) (*pipelinev1.PipelineResourceSpe
 
 	return spec, nil
 }
+
+func getRepoAndSha(p *pipelinev1.PipelineResourceSpec) (string, string, error) {
+	if p.Type != pipelinev1.PipelineResourceTypeGit {
+		return "", "", fmt.Errorf("failed to get repo and SHA from non-git resource: %s", p)
+	}
+	url, err := getResourceParamByName(p.Params, "url")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to find param url in getRepoAndSha: %w", err)
+	}
+
+	rev, err := getResourceParamByName(p.Params, "revision")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to find param revision in getRepoAndSha: %w", err)
+	}
+
+	return url, rev, nil
+}
+
+func getResourceParamByName(params []pipelinev1.ResourceParam, name string) (string, error) {
+	for _, p := range params {
+		if p.Name == name {
+			return p.Value, nil
+		}
+	}
+	return "", fmt.Errorf("no resource parameter with name %s", name)
+
+}

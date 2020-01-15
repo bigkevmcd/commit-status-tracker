@@ -68,6 +68,43 @@ func TestFindGitResourceWithNonGitResource(t *testing.T) {
 	}
 }
 
+func TestGetRepoAndSHA(t *testing.T) {
+	repoURL := "https://example.com/test/repo"
+	resourceTests := []struct {
+		name     string
+		resType  pipelinev1.PipelineResourceType
+		url      string
+		revision string
+		repo     string
+		sha      string
+		wantErr  string
+	}{
+		{"non-git resource", pipelinev1.PipelineResourceTypeImage, "", "", "", "", "non-git resource"},
+		{"git resource with no url", pipelinev1.PipelineResourceTypeGit, "", "master", "", "", "failed to find param url"},
+		{"git resource with no revision", pipelinev1.PipelineResourceTypeGit, repoURL, "", "", "", "failed to find param revision"},
+		{"git resource", pipelinev1.PipelineResourceTypeGit, repoURL, "master", repoURL, "master", ""},
+	}
+
+	for _, tt := range resourceTests {
+		res := makePipelineResource(tt.resType, tt.url, tt.revision)
+
+		repo, sha, err := getRepoAndSha(res)
+		if !matchError(t, tt.wantErr, err) {
+			t.Errorf("getRepoAndSha() %s got error %v, want %s", tt.name, err, tt.wantErr)
+			continue
+		}
+
+		if tt.repo != repo {
+			t.Errorf("getRepoAndSha() %s got repo %s, want %s", tt.name, repo, tt.repo)
+		}
+
+		if tt.sha != sha {
+			t.Errorf("getRepoAndSha() %s got SHA %s, want %s", tt.name, sha, tt.sha)
+		}
+	}
+
+}
+
 func makePipelineRunWithResources(opts ...tb.PipelineRunSpecOp) *pipelinev1.PipelineRun {
 	return tb.PipelineRun(pipelineRunName, testNamespace, tb.PipelineRunSpec(
 		"tomatoes", opts...,
@@ -101,6 +138,27 @@ func makeImageResourceBinding(url string) tb.PipelineRunSpecOp {
 				Value: url,
 			},
 			}}))
+}
+
+func makePipelineResource(resType pipelinev1.PipelineResourceType, url, rev string) *pipelinev1.PipelineResourceSpec {
+	spec := &pipelinev1.PipelineResourceSpec{
+		Type: resType,
+	}
+	if url != "" {
+		spec.Params = append(spec.Params,
+			pipelinev1.ResourceParam{
+				Name:  "url",
+				Value: url,
+			})
+	}
+	if rev != "" {
+		spec.Params = append(spec.Params,
+			pipelinev1.ResourceParam{
+				Name:  "revision",
+				Value: rev,
+			})
+	}
+	return spec
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

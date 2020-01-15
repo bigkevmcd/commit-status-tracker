@@ -77,6 +77,12 @@ func TestGetAuthSecretWithNoToken(t *testing.T) {
 
 func matchError(t *testing.T, s string, e error) bool {
 	t.Helper()
+	if s == "" && e == nil {
+		return true
+	}
+	if s != "" && e == nil {
+		return false
+	}
 	match, err := regexp.MatchString(s, e.Error())
 	if err != nil {
 		t.Fatal(err)
