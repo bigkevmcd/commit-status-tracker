@@ -15,14 +15,14 @@ import (
 func getCommitStatusInput(pr *pipelinev1.PipelineRun) *scm.StatusInput {
 	return &scm.StatusInput{
 		State:  convertState(getPipelineRunState(pr)),
-		Label:  getLabelByName(pr, statusContextLabel, "default"),
-		Desc:   getLabelByName(pr, statusDescriptionLabel, ""),
-		Target: getLabelByName(pr, statusTargetURLLabel, ""),
+		Label:  getAnnotationByName(pr, statusContextLabel, "default"),
+		Desc:   getAnnotationByName(pr, statusDescriptionLabel, ""),
+		Target: getAnnotationByName(pr, statusTargetURLLabel, ""),
 	}
 }
 
-func getLabelByName(pr *pipelinev1.PipelineRun, name, def string) string {
-	for k, v := range pr.Labels {
+func getAnnotationByName(pr *pipelinev1.PipelineRun, name, def string) string {
+	for k, v := range pr.Annotations {
 		if k == name {
 			return v
 		}

@@ -14,16 +14,16 @@ func TestLabelByName(t *testing.T) {
 	}{
 		{"no labels", nil, "default"},
 		{"no matching label",
-			[]tb.PipelineRunOp{tb.PipelineRunLabel("testing", "app")},
+			[]tb.PipelineRunOp{tb.PipelineRunAnnotation("testing", "app")},
 			"default"},
 		{"with matching label",
-			[]tb.PipelineRunOp{tb.PipelineRunLabel(statusContextLabel, "test-lint")},
+			[]tb.PipelineRunOp{tb.PipelineRunAnnotation(statusContextLabel, "test-lint")},
 			"test-lint"},
 	}
 
 	for _, tt := range nt {
 		r := tb.PipelineRun("test-pipeline-run-with-labels", "foo", tt.opts...)
-		if b := getLabelByName(r, statusContextLabel, "default"); b != tt.want {
+		if b := getAnnotationByName(r, statusContextLabel, "default"); b != tt.want {
 			t.Errorf("Context() %s got %v, want %v", tt.name, b, tt.want)
 		}
 	}
