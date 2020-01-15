@@ -15,7 +15,7 @@ spec:
       serviceAccountName: task-statuses
       containers:
         - name: task-statuses
-          image: quay.io/kmcdermo/statuses-operator:latest
+          image: REPLACE_IMAGE
           command:
           - task-statuses
           imagePullPolicy: Always
