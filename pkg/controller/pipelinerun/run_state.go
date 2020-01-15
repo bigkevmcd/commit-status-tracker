@@ -7,19 +7,31 @@ import (
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
 
-type Status int
+// State represents the state of a Pipeline.
+type State int
 
 const (
-	Pending Status = iota
+	Pending State = iota
 	Failed
 	Successful
+	Error
 )
 
-// GetStatus returns whether or not a PipelineRun was successful or not
+func (s State) String() string {
+	names := [...]string{
+		"Pending",
+		"Failed",
+		"Successful",
+		"Error"}
+	return names[s]
+}
+
+// getPipelineRunState returns whether or not a PipelineRun was successful or
+// not.
 //
 // It can return a Pending result if the task has not yet completed.
 // TODO: will likely need to work out if a task was killed OOM.
-func GetStatus(p *pipelinev1.PipelineRun) Status {
+func getPipelineRunState(p *pipelinev1.PipelineRun) State {
 	for _, c := range p.Status.Conditions {
 		if c.Type == apis.ConditionSucceeded {
 			switch c.Status {
@@ -34,12 +46,4 @@ func GetStatus(p *pipelinev1.PipelineRun) Status {
 		}
 	}
 	return Pending
-}
-
-func (s Status) String() string {
-	names := [...]string{
-		"Pending",
-		"Failed",
-		"Successful"}
-	return names[s]
 }

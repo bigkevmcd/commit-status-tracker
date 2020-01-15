@@ -14,7 +14,7 @@ import (
 func TestFindGitResourceWithNoRepository(t *testing.T) {
 	pipelineRun := makePipelineRunWithResources()
 
-	_, err := FindGitResource(pipelineRun)
+	_, err := findGitResource(pipelineRun)
 	if err == nil {
 		t.Fatal("did not get an error with no git resource")
 	}
@@ -38,7 +38,7 @@ func TestFindGitResourceWithRepository(t *testing.T) {
 		},
 	}
 
-	r, err := FindGitResource(pipelineRun)
+	r, err := findGitResource(pipelineRun)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestFindGitResourceWithMultipleRepositories(t *testing.T) {
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
 		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
 
-	_, err := FindGitResource(pipelineRun)
+	_, err := findGitResource(pipelineRun)
 	if err == nil {
 		t.Fatal("did not get an error with no git resource")
 	}
@@ -62,7 +62,7 @@ func TestFindGitResourceWithNonGitResource(t *testing.T) {
 	pipelineRun := makePipelineRunWithResources(
 		makeImageResourceBinding("example.com/project/myimage"))
 
-	_, err := FindGitResource(pipelineRun)
+	_, err := findGitResource(pipelineRun)
 	if err == nil {
 		t.Fatal("did not get an error with no git resource")
 	}

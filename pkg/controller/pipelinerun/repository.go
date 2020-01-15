@@ -6,11 +6,11 @@ import (
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
 
-// FindGitResource locates a Git PipelineResource in a PipelineRun.
+// findGitResource locates a Git PipelineResource in a PipelineRun.
 //
 // If no Git resources are found, an error is returned.
 // If more than one Git resource is found, an error is returned.
-func FindGitResource(p *pipelinev1.PipelineRun) (*pipelinev1.PipelineResourceSpec, error) {
+func findGitResource(p *pipelinev1.PipelineRun) (*pipelinev1.PipelineResourceSpec, error) {
 	var spec *pipelinev1.PipelineResourceSpec
 	for _, r := range p.Spec.Resources {
 		if r.ResourceSpec == nil {

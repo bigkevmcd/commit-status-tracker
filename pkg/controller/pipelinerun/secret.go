@@ -15,11 +15,11 @@ const (
 	secretID   = "token"
 )
 
-func getAuthSecret(c client.Client, ns types.NamespacedName) (string, error) {
+func getAuthSecret(c client.Client, ns string) (string, error) {
 	secret := &corev1.Secret{}
-	err := c.Get(context.TODO(), ns, secret)
+	err := c.Get(context.TODO(), getNamespaceSecretName(ns), secret)
 	if err != nil {
-		return "", fmt.Errorf("failed to getAuthSecret, error getting secret %s: '%q'", ns, err)
+		return "", fmt.Errorf("failed to getAuthSecret, error getting secret '%s' in namespace '%s': '%q'", secretName, ns, err)
 	}
 
 	tokenData, ok := secret.Data[secretID]

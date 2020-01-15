@@ -10,11 +10,11 @@ import (
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
 
-func TestGetStatus(t *testing.T) {
+func TestGetPipelineRunStatus(t *testing.T) {
 	statusTests := []struct {
 		conditionType   apis.ConditionType
 		conditionStatus corev1.ConditionStatus
-		want            Status
+		want            State
 	}{
 		{apis.ConditionSucceeded, corev1.ConditionTrue, Successful},
 		{apis.ConditionSucceeded, corev1.ConditionUnknown, Pending},
@@ -22,15 +22,14 @@ func TestGetStatus(t *testing.T) {
 	}
 
 	for _, tt := range statusTests {
-		s := GetStatus(makePipelineRunWithCondition(tt.conditionType, tt.conditionStatus))
+		s := getPipelineRunState(makePipelineRunWithCondition(tt.conditionType, tt.conditionStatus))
 		if s != tt.want {
-			t.Errorf("GetStatus(%s) got %v, want %v", tt.conditionStatus, s, tt.want)
+			t.Errorf("getPipelineRunState(%s) got %v, want %v", tt.conditionStatus, s, tt.want)
 		}
 
 	}
 }
 
-//		apis.Condition{Type: apis.ConditionSucceeded}),
 func makePipelineRunWithCondition(s apis.ConditionType, c corev1.ConditionStatus) *pipelinev1.PipelineRun {
 	return tb.PipelineRun(pipelineRunName, testNamespace, tb.PipelineRunSpec(
 		"tomatoes",
