@@ -2,6 +2,8 @@ package pipelinerun
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
@@ -30,11 +32,13 @@ func findGitResource(p *pipelinev1.PipelineRun) (*pipelinev1.PipelineResourceSpe
 	return spec, nil
 }
 
+// TODO This only parses GitHub repo paths, would need work to parse GitLab repo
+// paths too (can have more components).
 func getRepoAndSha(p *pipelinev1.PipelineResourceSpec) (string, string, error) {
 	if p.Type != pipelinev1.PipelineResourceTypeGit {
 		return "", "", fmt.Errorf("failed to get repo and SHA from non-git resource: %s", p)
 	}
-	url, err := getResourceParamByName(p.Params, "url")
+	u, err := getResourceParamByName(p.Params, "url")
 	if err != nil {
 		return "", "", fmt.Errorf("failed to find param url in getRepoAndSha: %w", err)
 	}
@@ -43,8 +47,12 @@ func getRepoAndSha(p *pipelinev1.PipelineResourceSpec) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("failed to find param revision in getRepoAndSha: %w", err)
 	}
+	repo, err := extractRepoFromGitHubURL(u)
+	if err != nil {
+		return "", "", fmt.Errorf("getRepoAndSHA failed: %w", err)
+	}
 
-	return url, rev, nil
+	return repo, rev, nil
 }
 
 func getResourceParamByName(params []pipelinev1.ResourceParam, name string) (string, error) {
@@ -54,5 +62,16 @@ func getResourceParamByName(params []pipelinev1.ResourceParam, name string) (str
 		}
 	}
 	return "", fmt.Errorf("no resource parameter with name %s", name)
+}
 
+func extractRepoFromGitHubURL(s string) (string, error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse repo URL %s: %w", s, err)
+	}
+	parts := strings.Split(u.Path, "/")
+	if len(parts) != 3 {
+		return "", fmt.Errorf("could not determine repo from URL: %v", u)
+	}
+	return fmt.Sprintf("%s/%s", parts[1], parts[2]), nil
 }

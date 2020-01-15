@@ -82,7 +82,7 @@ func TestGetRepoAndSHA(t *testing.T) {
 		{"non-git resource", pipelinev1.PipelineResourceTypeImage, "", "", "", "", "non-git resource"},
 		{"git resource with no url", pipelinev1.PipelineResourceTypeGit, "", "master", "", "", "failed to find param url"},
 		{"git resource with no revision", pipelinev1.PipelineResourceTypeGit, repoURL, "", "", "", "failed to find param revision"},
-		{"git resource", pipelinev1.PipelineResourceTypeGit, repoURL, "master", repoURL, "master", ""},
+		{"git resource", pipelinev1.PipelineResourceTypeGit, repoURL, "master", "test/repo", "master", ""},
 	}
 
 	for _, tt := range resourceTests {
@@ -90,19 +90,43 @@ func TestGetRepoAndSHA(t *testing.T) {
 
 		repo, sha, err := getRepoAndSha(res)
 		if !matchError(t, tt.wantErr, err) {
-			t.Errorf("getRepoAndSha() %s got error %v, want %s", tt.name, err, tt.wantErr)
+			t.Errorf("getRepoAndSha() %s: got error %v, want %s", tt.name, err, tt.wantErr)
 			continue
 		}
 
 		if tt.repo != repo {
-			t.Errorf("getRepoAndSha() %s got repo %s, want %s", tt.name, repo, tt.repo)
+			t.Errorf("getRepoAndSha() %s: got repo %s, want %s", tt.name, repo, tt.repo)
 		}
 
 		if tt.sha != sha {
-			t.Errorf("getRepoAndSha() %s got SHA %s, want %s", tt.name, sha, tt.sha)
+			t.Errorf("getRepoAndSha() %s: got SHA %s, want %s", tt.name, sha, tt.sha)
 		}
 	}
+}
 
+func TestExtractRepoFromGitHubURL(t *testing.T) {
+	repoURLTests := []struct {
+		name    string
+		url     string
+		repo    string
+		wantErr string
+	}{
+		{"standard URL", "https://github.com/tektoncd/triggers", "tektoncd/triggers", ""},
+		{"invalid URL", "http://192.168.0.%31/test/repo", "", "failed to parse repo URL.*invalid URL escape"},
+		{"url with no repo path", "https://github.com/", "", "could not determine repo from URL"},
+	}
+
+	for _, tt := range repoURLTests {
+		repo, err := extractRepoFromGitHubURL(tt.url)
+		if !matchError(t, tt.wantErr, err) {
+			t.Errorf("extractRepoFromGitHubURL() %s: got error %v, want %s", tt.name, err, tt.wantErr)
+			continue
+		}
+
+		if tt.repo != repo {
+			t.Errorf("getRepoAndSha() %s: got repo %s, want %s", tt.name, repo, tt.repo)
+		}
+	}
 }
 
 func makePipelineRunWithResources(opts ...tb.PipelineRunSpecOp) *pipelinev1.PipelineRun {
