@@ -60,7 +60,7 @@ The annotations are:
       app.example.com/git-status
     </th>
     <td>
-      This indicates that this <pre>PipelineRun</pre> should trigger commit-status notifications.
+      This indicates that this <code>PipelineRun</code> should trigger commit-status notifications.
     </td>
     <td><b>Yes</b></td>
     <td></td>
