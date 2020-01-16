@@ -4,6 +4,20 @@
 
 This operator tracks completed [Tekton](https://github.com/tektoncd/pipeline) [PipelineRuns](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md) and attempts to create a [GitHub Commit Status](https://developer.github.com/v3/repos/statuses/) with the success or failure of the PipelineRun.
 
+## Why?
+
+If you're running tasks that are important parts of your deployment flow, you
+can define policies that require specific checks are carried out before code can
+be merged.
+
+These can be enforced by GitHub, using their [branch
+protection](https://help.github.com/en/github/administering-a-repository/configuring-protected-branches)
+mechanism.
+
+If you want your Tekton Pipelines to be a part of this, then you'll want to
+report the success or failure of your PipelineRuns to Github (you might also
+want Tasks, but that's implemented yet).
+
 ## Prerequisites
 
 - [dep][dep_tool] version v0.5.0+.
