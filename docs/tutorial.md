@@ -3,7 +3,7 @@
 ## Prerequisites
 
 You'll need this operator, and Tekton installed see the installation
-[instructions](#../README.md#installing).
+[instructions](../README.md#installing).
 
 And you'll need a GitHub auth token.
 
@@ -57,42 +57,42 @@ The annotations are:
   </tr>
   <tr>
     <th>
-      `app.example.com/git-status`
+      app.example.com/git-status
     </th>
     <td>
       This indicates that this `PipelineRun` should trigger commit-status notifications.
     </td>
-    <td>**Yes**</td>
+    <td><b>Yes</b></td>
     <td></td>
   </tr>
   <tr>
     <th>
-      `app.example.com/status-context`
+      app.example.com/status-context
     </th>
     <td>
       This is the [context](https://developer.github.com/v3/repos/statuses/#create-a-status) that will be reported, you can require named contexts in your branch protection rules.
     </td>
-    <td>**No**</td>
-    <td>default</td>
+    <td>No</td>
+    <td>"default"</td>
   </tr>
   <tr>
     <th>
-      `app.example.com/status-description`
+      app.example.com/status-description
     </th>
     <td>
       This is used as the description of the context, not the commit.
     </td>
-    <td>**No**</td>
+    <td>No</td>
     <td>""</td>
   </tr>
   <tr>
     <th>
-     `app.example.com/status-target-url`
+     app.example.com/status-target-url
     </th>
     <td>
       If provided, then this will be linked in the GitHub web UI, this could be used to link to logs or output.
     </td>
-    <td>**No**</td>
+    <td>No</td>
     <td>""</td>
   </tr>
 </table>
