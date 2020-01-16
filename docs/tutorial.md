@@ -60,7 +60,7 @@ The annotations are:
       app.example.com/git-status
     </th>
     <td>
-      This indicates that this `PipelineRun` should trigger commit-status notifications.
+      This indicates that this <pre>PipelineRun</pre> should trigger commit-status notifications.
     </td>
     <td><b>Yes</b></td>
     <td></td>
@@ -70,7 +70,7 @@ The annotations are:
       app.example.com/status-context
     </th>
     <td>
-      This is the [context](https://developer.github.com/v3/repos/statuses/#create-a-status) that will be reported, you can require named contexts in your branch protection rules.
+      This is the <a href="https://developer.github.com/v3/repos/statuses/#create-a-status">context</a> that will be reported, you can require named contexts in your branch protection rules.
     </td>
     <td>No</td>
     <td>"default"</td>
