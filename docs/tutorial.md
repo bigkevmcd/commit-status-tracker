@@ -108,6 +108,15 @@ and *revision* from there.
 If no suitable `PipelineResource` is found, then this will be logged as an
 error, and _not_ retried.
 
+## Execution
+
+The easiest way to see this in action, is to create a Pull Request against a Git
+Repository.
+
+Create a [git resource](https://github.com/tektoncd/pipeline/blob/master/docs/resources.md#git-resource) and set the revision to the SHA of the Pull Request (the head commit).
+
+Execute the `PipelineRun` and view the PR, and the status should be reported.
+
 ## FAQ
 
  1. Does this work with `resourceRef`
