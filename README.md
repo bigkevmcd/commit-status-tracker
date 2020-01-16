@@ -71,7 +71,7 @@ $ sed -i "" 's|REPLACE_IMAGE|quay.io/example-inc/statuses-operator:v0.0.1|g' dep
 You *must* have Tekton [Pipeline](https://github.com/tektoncd/pipeline/) installed before installing this operator:
 
 ```shell
-$ kubectl apply -f https://github.com/tektoncd/pipeline/releases/download/v0.9.2/release.yaml
+$ kubectl apply -f https://github.com/tektoncd/pipeline/releases/download/v0.9.1/release.yaml
 ```
 
 And then you can install the statuses operator with:
