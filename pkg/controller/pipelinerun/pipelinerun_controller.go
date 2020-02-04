@@ -101,7 +101,6 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		reqLogger.Info("found a git resource", "resource", res)
 	}
 
-	// TODO: Create a GitHub status.
 	secret, err := getAuthSecret(r.client, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to get an authSecret")
