@@ -66,10 +66,11 @@ type ReconcilePipelineRun struct {
 func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling PipelineRun")
+	ctx := context.Background()
 
 	// Fetch the PipelineRun instance
 	pipelineRun := &pipelinesv1alpha1.PipelineRun{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, pipelineRun)
+	err := r.client.Get(ctx, request.NamespacedName, pipelineRun)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -116,7 +117,7 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	client := r.scmFactory(secret)
 	commitStatusInput := getCommitStatusInput(pipelineRun)
 	reqLogger.Info("creating a github status for", "resource", res, "status", commitStatusInput)
-	s, _, err := client.Repositories.CreateStatus(context.Background(), repo, sha, commitStatusInput)
+	s, _, err := client.Repositories.CreateStatus(ctx, repo, sha, commitStatusInput)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

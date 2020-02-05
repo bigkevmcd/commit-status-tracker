@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/bigkevmcd/task-statuses/pkg/controller/pipelinerun"
+	"github.com/bigkevmcd/commit-status-tracker/pkg/controller/pipelinerun"
 )
 
 func init() {

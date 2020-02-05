@@ -1,4 +1,4 @@
-module github.com/bigkevmcd/task-statuses
+module github.com/bigkevmcd/commit-status-tracker
 
 go 1.13
 
