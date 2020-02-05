@@ -53,9 +53,7 @@ func TestPipelineRunControllerPendingState(t *testing.T) {
 		},
 	}
 	res, err := r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
-	}
+	fatalIfError(t, err, "reconcile: (%v)", err)
 	if res.Requeue {
 		t.Fatal("reconcile requeued request")
 	}
@@ -109,15 +107,12 @@ func TestPipelineRunReconcileWithPreviousPending(t *testing.T) {
 	}
 	// There should be no recorded statuses, because the state is still pending
 	// and the fake client's state was deleted above.
-	if l := len(data.Statuses["master"]); l != 0 {
-		t.Fatalf("too many statuses recorded, got %v, wanted 0", l)
-	}
-
+	assertNoStatusesRecorded(t, data)
 }
 
-// TestPipelineRunController runs ReconcilePipelineRun.Reconcile() against a
+// TestPipelineRunControllerSuccessState runs ReconcilePipelineRun.Reconcile() against a
 // fake client that tracks PipelineRun objects.
-func TestPipelineRunController(t *testing.T) {
+func TestPipelineRunControllerSuccessState(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
 	pipelineRun := makePipelineRunWithResources(
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
@@ -141,9 +136,7 @@ func TestPipelineRunController(t *testing.T) {
 		},
 	}
 	res, err := r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
-	}
+	fatalIfError(t, err, "reconcile: (%v)", err)
 	if res.Requeue {
 		t.Fatal("reconcile requeued request")
 	}
@@ -154,28 +147,169 @@ func TestPipelineRunController(t *testing.T) {
 	}
 }
 
+// TestPipelineRunControllerFailedState runs ReconcilePipelineRun.Reconcile() against a
+// fake client that tracks PipelineRun objects.
+func TestPipelineRunControllerFailedState(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	pipelineRun := makePipelineRunWithResources(
+		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	applyOpts(
+		pipelineRun,
+		tb.PipelineRunAnnotation(notifiableName, "true"),
+		tb.PipelineRunAnnotation(statusContextName, "test-context"),
+		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
+			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionFalse})))
+	objs := []runtime.Object{
+		pipelineRun,
+		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+	}
+	r, data := makeReconciler(pipelineRun, objs...)
+
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      pipelineRunName,
+			Namespace: testNamespace,
+		},
+	}
+	res, err := r.Reconcile(req)
+	fatalIfError(t, err, "reconcile: (%v)", err)
+	if res.Requeue {
+		t.Fatal("reconcile requeued request")
+	}
+	wanted := &scm.Status{State: scm.StateFailure, Label: "test-context", Desc: "testing", Target: ""}
+	status := data.Statuses["master"][0]
+	if !reflect.DeepEqual(status, wanted) {
+		t.Fatalf("commit-status notification got %#v, wanted %#v\n", status, wanted)
+	}
+}
+
 // TestPipelineRunReconcileWithNoGitCredentials tests a non-notifable
 // PipelineRun.
 func TestPipelineRunReconcileNonNotifiable(t *testing.T) {
-	t.Skip()
+	logf.SetLogger(logf.ZapLogger(true))
+	pipelineRun := makePipelineRunWithResources(
+		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	applyOpts(
+		pipelineRun,
+		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
+			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
+	objs := []runtime.Object{
+		pipelineRun,
+		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+	}
+	r, data := makeReconciler(pipelineRun, objs...)
+
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      pipelineRunName,
+			Namespace: testNamespace,
+		},
+	}
+	res, err := r.Reconcile(req)
+	fatalIfError(t, err, "reconcile: (%v)", err)
+	if res.Requeue {
+		t.Fatal("reconcile requeued request")
+	}
+	assertNoStatusesRecorded(t, data)
 }
 
 // TestPipelineRunReconcileWithNoGitCredentials tests a notifable PipelineRun
 // with no "git" resource.
 func TestPipelineRunReconcileWithNoGitRepository(t *testing.T) {
-	t.Skip()
+	logf.SetLogger(logf.ZapLogger(true))
+	pipelineRun := makePipelineRunWithResources()
+	applyOpts(
+		pipelineRun,
+		tb.PipelineRunAnnotation(notifiableName, "true"),
+		tb.PipelineRunAnnotation(statusContextName, "test-context"),
+		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
+			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
+	objs := []runtime.Object{
+		pipelineRun,
+		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+	}
+	r, data := makeReconciler(pipelineRun, objs...)
+
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      pipelineRunName,
+			Namespace: testNamespace,
+		},
+	}
+	res, err := r.Reconcile(req)
+	fatalIfError(t, err, "reconcile: (%v)", err)
+	if res.Requeue {
+		t.Fatal("reconcile requeued request")
+	}
+	assertNoStatusesRecorded(t, data)
 }
 
 // TestPipelineRunReconcileWithNoGitCredentials tests a notifable PipelineRun
 // with multiple "git" resources.
 func TestPipelineRunReconcileWithGitRepositories(t *testing.T) {
-	t.Skip()
+	logf.SetLogger(logf.ZapLogger(true))
+	pipelineRun := makePipelineRunWithResources(
+		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
+		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
+	applyOpts(
+		pipelineRun,
+		tb.PipelineRunAnnotation(notifiableName, "true"),
+		tb.PipelineRunAnnotation(statusContextName, "test-context"),
+		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
+			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
+	objs := []runtime.Object{
+		pipelineRun,
+		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+	}
+	r, data := makeReconciler(pipelineRun, objs...)
+
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      pipelineRunName,
+			Namespace: testNamespace,
+		},
+	}
+	res, err := r.Reconcile(req)
+	fatalIfError(t, err, "reconcile: (%v)", err)
+	if res.Requeue {
+		t.Fatal("reconcile requeued request")
+	}
+	assertNoStatusesRecorded(t, data)
 }
 
 // TestPipelineRunReconcileWithNoGitCredentials tests a notifable PipelineRun
 // with a "git" resource, but with no Git credentials.
 func TestPipelineRunReconcileWithNoGitCredentials(t *testing.T) {
-	t.Skip()
+	logf.SetLogger(logf.ZapLogger(true))
+	pipelineRun := makePipelineRunWithResources(
+		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
+		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
+	applyOpts(
+		pipelineRun,
+		tb.PipelineRunAnnotation(notifiableName, "true"),
+		tb.PipelineRunAnnotation(statusContextName, "test-context"),
+		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
+			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
+	objs := []runtime.Object{pipelineRun}
+	r, data := makeReconciler(pipelineRun, objs...)
+
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      pipelineRunName,
+			Namespace: testNamespace,
+		},
+	}
+	res, err := r.Reconcile(req)
+	fatalIfError(t, err, "reconcile: (%v)", err)
+	if res.Requeue {
+		t.Fatal("reconcile requeued request")
+	}
+	assertNoStatusesRecorded(t, data)
+
 }
 
 func TestKeyForCommit(t *testing.T) {
@@ -184,7 +318,8 @@ func TestKeyForCommit(t *testing.T) {
 		sha  string
 		want string
 	}{
-		{"tekton/triggers", "e1466db56110fa1b813277c1647e20283d3370c3", "7b2841ab8791fece7acdc0b3bb6e398c7a184273"},
+		{"tekton/triggers", "e1466db56110fa1b813277c1647e20283d3370c3",
+			"7b2841ab8791fece7acdc0b3bb6e398c7a184273"},
 	}
 
 	for _, tt := range inputTests {
@@ -219,5 +354,11 @@ func makeReconciler(pr *pipelinev1.PipelineRun, objs ...runtime.Object) (*Reconc
 func fatalIfError(t *testing.T, err error, format string, a ...interface{}) {
 	if err != nil {
 		t.Fatalf(format, a...)
+	}
+}
+
+func assertNoStatusesRecorded(t *testing.T, d *fakescm.Data) {
+	if l := len(d.Statuses["master"]); l != 0 {
+		t.Fatalf("too many statuses recorded, got %v, wanted 0", l)
 	}
 }
