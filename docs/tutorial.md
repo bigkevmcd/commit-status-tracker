@@ -28,9 +28,9 @@ kind: PipelineRun
 metadata:
   name: demo-pipeline-run
   annotations:
-    "app.example.com/git-status": "true"
-    "app.example.com/status-context": "demo-pipeline"
-    "app.example.com/status-description": "this is a test"
+    "tekton.dev/git-status": "true"
+    "tekton.dev/status-context": "demo-pipeline"
+    "tekton.dev/status-description": "this is a test"
 spec:
   pipelineRef:
     name: demo-pipeline
