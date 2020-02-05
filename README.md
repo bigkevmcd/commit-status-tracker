@@ -1,4 +1,4 @@
-# task-statuses Go Operator
+# commit-status-tracker Go Operator [![Docker Repository on Quay](https://quay.io/repository/kmcdermo/commit-status-tracker/status "Docker Repository on Quay")](https://quay.io/repository/kmcdermo/commit-status-tracker)
 
 ## Overview
 
@@ -34,8 +34,8 @@ want Tasks, but that's implemented yet).
 Checkout the Operator repository
 
 ```
-$ git clone https://github.com/bigkevmcd/statuses-operator.git
-$ cd statuses-operator
+$ git clone https://github.com/bigkevmcd/commit-status-tracker.git
+$ cd commit-status-tracker
 ```
 ### Pulling the dependencies
 
@@ -50,7 +50,7 @@ $ go mod tidy
 Build the operator image and push it to a public registry, such as quay.io:
 
 ```
-$ export IMAGE=quay.io/example-inc/statuses-operator:v0.0.1
+$ export IMAGE=quay.io/example-inc/commit-status-tracker:v0.0.1
 $ operator-sdk build $IMAGE
 $ docker push $IMAGE
 ```
@@ -59,12 +59,12 @@ $ docker push $IMAGE
 
 ```shell
 # Update the operator manifest to use the built image name (if you are performing these steps on OSX, see note below)
-$ sed -i 's|REPLACE_IMAGE|quay.io/example-inc/statuses-operator:v0.0.1|g' deploy/operator.yaml
+$ sed -i 's|REPLACE_IMAGE|quay.io/example-inc/commit-status-tracker:v0.0.1|g' deploy/operator.yaml
 # On OSX use:
-$ sed -i "" 's|REPLACE_IMAGE|quay.io/example-inc/statuses-operator:v0.0.1|g' deploy/operator.yaml
+$ sed -i "" 's|REPLACE_IMAGE|quay.io/example-inc/commit-status-tracker:v0.0.1|g' deploy/operator.yaml
 ```
 
-**NOTE** The `quay.io/example-inc/statuses-operator:v0.0.1` is an example. You should build and push the image for your repository.
+**NOTE** The `quay.io/example-inc/commit-status-tracker:v0.0.1` is an example. You should build and push the image for your repository.
 
 ### Installing
 
@@ -91,7 +91,7 @@ $ kubectl delete -f https://github.com/bigkevmcd/operator-statuses/releases/down
 Use the following command to check the operator logs.
 
 ```shell
-$ kubectl logs statuses-operator
+$ kubectl logs commit-status-tracker
 ```
 
 ### Running Tests

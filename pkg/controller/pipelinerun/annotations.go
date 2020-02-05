@@ -1,11 +1,10 @@
 package pipelinerun
 
-// TODO: Determine a base domain.
 const (
-	notifiableName      = "app.example.com/git-status"
-	statusContextName   = "app.example.com/status-context"
-	statusTargetURLName = "app.example.com/status-target-url"
+	notifiableName      = "tekton.dev/git-status"
+	statusContextName   = "tekton.dev/status-context"
+	statusTargetURLName = "tekton.dev/status-target-url"
 
 	// TODO: This could also come from a ConfigMap based on the context.
-	statusDescriptionName = "app.example.com/status-description"
+	statusDescriptionName = "tekton.dev/status-description"
 )

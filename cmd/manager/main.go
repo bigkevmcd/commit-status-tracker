@@ -24,9 +24,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
-	"github.com/bigkevmcd/task-statuses/pkg/apis"
-	"github.com/bigkevmcd/task-statuses/pkg/controller"
-	"github.com/bigkevmcd/task-statuses/version"
+	"github.com/bigkevmcd/commit-status-tracker/pkg/apis"
+	"github.com/bigkevmcd/commit-status-tracker/pkg/controller"
+	"github.com/bigkevmcd/commit-status-tracker/version"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -82,7 +82,7 @@ func main() {
 
 	ctx := context.TODO()
 	// Become the leader before proceeding
-	err = leader.Become(ctx, "task-statuses-lock")
+	err = leader.Become(ctx, "commit-status-tracker-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

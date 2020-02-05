@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: task-statuses
+  name: commit-status-tracker
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: task-statuses
+      name: commit-status-tracker
   template:
     metadata:
       labels:
-        name: task-statuses
+        name: commit-status-tracker
     spec:
-      serviceAccountName: task-statuses
+      serviceAccountName: commit-status-tracker
       containers:
-        - name: task-statuses
-          image: REPLACE_IMAGE
+        - name: commit-status-tracker
+          image: quay.io/kmcdermo/commit-status-tracker
           command:
-          - task-statuses
+          - commit-status-tracker
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
@@ -29,4 +29,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "task-statuses"
+              value: "commit-status-tracker"

@@ -1,7 +1,7 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: task-statuses
+  name: commit-status-tracker
 rules:
 - apiGroups:
   - ""
@@ -49,7 +49,7 @@ rules:
   resources:
   - deployments/finalizers
   resourceNames:
-  - task-statuses
+  - commit-status-tracker
   verbs:
   - "update"
 - apiGroups:
