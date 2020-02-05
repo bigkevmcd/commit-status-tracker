@@ -2,6 +2,8 @@ package pipelinerun
 
 import (
 	"context"
+	"crypto/sha1"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -24,9 +26,12 @@ func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
 }
 
+// used as an in-memory store to track pending runs.
+type pipelineRunTracker map[string]State
+
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcilePipelineRun{client: mgr.GetClient(), scheme: mgr.GetScheme(), scmFactory: createClient}
+	return &ReconcilePipelineRun{client: mgr.GetClient(), scheme: mgr.GetScheme(), scmFactory: createClient, pipelineRuns: make(pipelineRunTracker)}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -43,16 +48,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-// blank assignment to verify that ReconcilePipelineRun implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcilePipelineRun{}
-
 // ReconcilePipelineRun reconciles a PipelineRun object
 type ReconcilePipelineRun struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client     client.Client
-	scheme     *runtime.Scheme
-	scmFactory scmClientFactory
+	client       client.Client
+	scheme       *runtime.Scheme
+	scmFactory   scmClientFactory
+	pipelineRuns pipelineRunTracker
 }
 
 // Reconcile reads that state of the cluster for a PipelineRun object and makes changes based on the state read
@@ -79,12 +82,6 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, nil
 	}
 
-	status := getPipelineRunState(pipelineRun)
-	if status == Pending {
-		reqLogger.Info("pipelineRun still pending")
-		return reconcile.Result{}, nil
-	}
-
 	res, err := findGitResource(pipelineRun)
 	if err != nil {
 		reqLogger.Error(err, "failed to find a git resource")
@@ -101,6 +98,15 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		reqLogger.Info("found a git resource", "resource", res)
 	}
 
+	key := keyForCommit(repo, sha)
+	status := getPipelineRunState(pipelineRun)
+	last, ok := r.pipelineRuns[key]
+	if ok {
+		if status == last {
+			return reconcile.Result{}, nil
+		}
+	}
+
 	secret, err := getAuthSecret(r.client, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to get an authSecret")
@@ -111,6 +117,18 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	commitStatusInput := getCommitStatusInput(pipelineRun)
 	reqLogger.Info("creating a github status for", "resource", res, "status", commitStatusInput)
 	s, _, err := client.Repositories.CreateStatus(context.Background(), repo, sha, commitStatusInput)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	r.pipelineRuns[key] = status
 	reqLogger.Info("created a github status", "status", s)
 	return reconcile.Result{}, nil
+}
+
+func keyForCommit(repo, sha string) string {
+	return sha1String(fmt.Sprintf("%s:%s", repo, sha))
+}
+
+func sha1String(s string) string {
+	return fmt.Sprintf("%x", sha1.Sum([]byte(s)))
 }

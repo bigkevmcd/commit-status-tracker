@@ -25,6 +25,96 @@ var (
 	testToken       = "abcdefghijklmnopqrstuvwxyz12345678901234"
 )
 
+var _ reconcile.Reconciler = &ReconcilePipelineRun{}
+
+// TestPipelineRunControllerPendingState runs ReconcilePipelineRun.Reconcile() against a
+// fake client that tracks PipelineRun objects.
+func TestPipelineRunControllerPendingState(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	pipelineRun := makePipelineRunWithResources(
+		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	applyOpts(
+		pipelineRun,
+		tb.PipelineRunAnnotation(notifiableName, "true"),
+		tb.PipelineRunAnnotation(statusContextName, "test-context"),
+		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
+			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
+	objs := []runtime.Object{
+		pipelineRun,
+		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+	}
+	r, data := makeReconciler(pipelineRun, objs...)
+
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      pipelineRunName,
+			Namespace: testNamespace,
+		},
+	}
+	res, err := r.Reconcile(req)
+	if err != nil {
+		t.Fatalf("reconcile: (%v)", err)
+	}
+	if res.Requeue {
+		t.Fatal("reconcile requeued request")
+	}
+	wanted := &scm.Status{State: scm.StatePending, Label: "test-context", Desc: "testing", Target: ""}
+	status := data.Statuses["master"][0]
+	if !reflect.DeepEqual(status, wanted) {
+		t.Fatalf("commit-status notification got %#v, wanted %#v\n", status, wanted)
+	}
+}
+
+// TestPipelineRunReconcileWithPreviousPending tests a PipelineRun that
+// we've already sent a pending notification.
+func TestPipelineRunReconcileWithPreviousPending(t *testing.T) {
+	logf.SetLogger(logf.ZapLogger(true))
+	pipelineRun := makePipelineRunWithResources(
+		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	applyOpts(
+		pipelineRun,
+		tb.PipelineRunAnnotation(notifiableName, "true"),
+		tb.PipelineRunAnnotation(statusContextName, "test-context"),
+		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
+			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
+	objs := []runtime.Object{
+		pipelineRun,
+		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+	}
+
+	r, data := makeReconciler(pipelineRun, objs...)
+
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      pipelineRunName,
+			Namespace: testNamespace,
+		},
+	}
+	// This runs Reconcile twice.
+	res, err := r.Reconcile(req)
+	fatalIfError(t, err, "reconcile: (%v)", err)
+	if res.Requeue {
+		t.Fatal("reconcile requeued request")
+	}
+	// This cleans out the existing date for the data, because the fake scm
+	// client updates in-place, so there's no way to know if it received multiple
+	// pending notifications.
+	delete(data.Statuses, "master")
+	res, err = r.Reconcile(req)
+	fatalIfError(t, err, "reconcile: (%v)", err)
+	if res.Requeue {
+		t.Fatal("reconcile requeued request")
+	}
+	// There should be no recorded statuses, because the state is still pending
+	// and the fake client's state was deleted above.
+	if l := len(data.Statuses["master"]); l != 0 {
+		t.Fatalf("too many statuses recorded, got %v, wanted 0", l)
+	}
+
+}
+
 // TestPipelineRunController runs ReconcilePipelineRun.Reconcile() against a
 // fake client that tracks PipelineRun objects.
 func TestPipelineRunController(t *testing.T) {
@@ -42,15 +132,7 @@ func TestPipelineRunController(t *testing.T) {
 		pipelineRun,
 		makeSecret(map[string][]byte{"token": []byte(testToken)}),
 	}
-
-	s := scheme.Scheme
-	s.AddKnownTypes(pipelinev1.SchemeGroupVersion, pipelineRun)
-	cl := fake.NewFakeClient(objs...)
-	client, data := fakescm.NewDefault()
-	fakeClientFactory := func(s string) *scm.Client {
-		return client
-	}
-	r := &ReconcilePipelineRun{client: cl, scheme: s, scmFactory: fakeClientFactory}
+	r, data := makeReconciler(pipelineRun, objs...)
 
 	req := reconcile.Request{
 		NamespacedName: types.NamespacedName{
@@ -96,8 +178,46 @@ func TestPipelineRunReconcileWithNoGitCredentials(t *testing.T) {
 	t.Skip()
 }
 
+func TestKeyForCommit(t *testing.T) {
+	inputTests := []struct {
+		repo string
+		sha  string
+		want string
+	}{
+		{"tekton/triggers", "e1466db56110fa1b813277c1647e20283d3370c3", "7b2841ab8791fece7acdc0b3bb6e398c7a184273"},
+	}
+
+	for _, tt := range inputTests {
+		if v := keyForCommit(tt.repo, tt.sha); v != tt.want {
+			t.Errorf("keyForCommit(%#v, %#v) got %#v, want %#v", tt.repo, tt.sha, v, tt.want)
+		}
+	}
+}
+
 func applyOpts(pr *pipelinev1.PipelineRun, opts ...tb.PipelineRunOp) {
 	for _, o := range opts {
 		o(pr)
+	}
+}
+
+func makeReconciler(pr *pipelinev1.PipelineRun, objs ...runtime.Object) (*ReconcilePipelineRun, *fakescm.Data) {
+	s := scheme.Scheme
+	s.AddKnownTypes(pipelinev1.SchemeGroupVersion, pr)
+	cl := fake.NewFakeClient(objs...)
+	client, data := fakescm.NewDefault()
+	fakeClientFactory := func(s string) *scm.Client {
+		return client
+	}
+	return &ReconcilePipelineRun{
+		client:       cl,
+		scheme:       s,
+		scmFactory:   fakeClientFactory,
+		pipelineRuns: make(pipelineRunTracker),
+	}, data
+}
+
+func fatalIfError(t *testing.T, err error, format string, a ...interface{}) {
+	if err != nil {
+		t.Fatalf(format, a...)
 	}
 }
