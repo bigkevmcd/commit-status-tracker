@@ -57,7 +57,7 @@ The annotations are:
   </tr>
   <tr>
     <th>
-      app.example.com/git-status
+      tekton.dev/git-status
     </th>
     <td>
       This indicates that this <code>PipelineRun</code> should trigger commit-status notifications.
@@ -67,7 +67,7 @@ The annotations are:
   </tr>
   <tr>
     <th>
-      app.example.com/status-context
+      tekton.dev/status-context
     </th>
     <td>
       This is the <a href="https://developer.github.com/v3/repos/statuses/#create-a-status">context</a> that will be reported, you can require named contexts in your branch protection rules.
@@ -77,7 +77,7 @@ The annotations are:
   </tr>
   <tr>
     <th>
-      app.example.com/status-description
+      tekton.dev/status-description
     </th>
     <td>
       This is used as the description of the context, not the commit.
@@ -87,7 +87,7 @@ The annotations are:
   </tr>
   <tr>
     <th>
-     app.example.com/status-target-url
+     tekton.dev/status-target-url
     </th>
     <td>
       If provided, then this will be linked in the GitHub web UI, this could be used to link to logs or output.
