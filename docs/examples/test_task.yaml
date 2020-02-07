@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: test-task
+spec:
+  inputs:
+    resources:
+      - name: source
+        type: git
+    params:
+    - name: message
+      description: the message to echo
+      default: hello
+  steps:
+  - image: ubuntu
+    script: |
+        #!/usr/bin/env bash
+        echo $(inputs.params.message)

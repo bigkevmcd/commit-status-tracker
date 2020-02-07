@@ -19,7 +19,7 @@ $ kubectl create secret generic github-auth --from-file=$HOME/Downloads/token
 
 The operator watches for PipelineRuns with specific annotations.
 
-This is an alpha operator, and the annotation names will change, but for now
+This is an alpha operator, and the annotation names will likely change, but for now
 you'll need...
 
 ```yaml
@@ -99,14 +99,14 @@ The annotations are:
 
 ## Detecting the Git Repository
 
-Currently, this uses a simple mechanism to find the Git repository and SHA to
-update the status of.
+Currently, this uses a simple mechanism to find the Git repository and SHA to update the status of.
 
-It looks for a single `PipelineResource` of type `git` and pulls the *url*
-and *revision* from there.
+It looks for a single `PipelineResource` of type `git` and pulls the *url* and *revision* from there.
 
 If no suitable `PipelineResource` is found, then this will be logged as an
 error, and _not_ retried.
+
+It'd be fairly trivial to fallback to an annotation for the repo and SHA.
 
 ## Execution
 
@@ -117,6 +117,12 @@ Create a [git resource](https://github.com/tektoncd/pipeline/blob/master/docs/re
 
 Execute the `PipelineRun` and view the PR, and the status should be reported.
 
+## Example files
+
+There are a complete set of resources in the [examples](./examples) directory.
+
+NOTE: **You must replace the Repository and SHA entries in the example PipelineRun**
+
 ## FAQ
 
  1. Does this work with `resourceRef`
@@ -124,3 +130,5 @@ Execute the `PipelineRun` and view the PR, and the status should be reported.
  1. Can this pull the repository details from a `pullrequest`
     `PipelineResource`?
     *Not yet, again, this is on my TODO list*.
+ 1. Why don'ty you use labels instead of annotations?
+    *Labels can't contain spaces, which are useful in descriptions*

@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: demo-pipeline-run
+  annotations:
+    "tekton.dev/git-status": "true"
+    "tekton.dev/status-context": "commit-status-tracker-demo"
+    "tekton.dev/status-description": "This is coming from pipeline_run_with_git.yaml"
+spec:
+  pipelineRef:
+    name: demo-pipeline
+  serviceAccountName: 'default'
+  resources:
+  - name: source
+    resourceSpec:
+      type: git
+      params:
+        - name: url
+          value: <REPLACE THIS WITH A GIT REPO YOU OWN>
+        - name: revision
+          value: <REPLACE THIS WITH THE FULL GIT SHA OF AN OPEN PULL REQUEST - THIS WILL MAKE IT EASY TO SEE IN THE CHECKS>
