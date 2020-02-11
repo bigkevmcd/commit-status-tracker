@@ -83,6 +83,7 @@ func TestGetRepoAndSHA(t *testing.T) {
 		{"git resource with no url", pipelinev1.PipelineResourceTypeGit, "", "master", "", "", "failed to find param url"},
 		{"git resource with no revision", pipelinev1.PipelineResourceTypeGit, repoURL, "", "", "", "failed to find param revision"},
 		{"git resource", pipelinev1.PipelineResourceTypeGit, repoURL, "master", "test/repo", "master", ""},
+		{"git resource with .git", pipelinev1.PipelineResourceTypeGit, repoURL + ".git", "master", "test/repo", "master", ""},
 	}
 
 	for _, tt := range resourceTests {

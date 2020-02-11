@@ -52,7 +52,7 @@ func getRepoAndSHA(p *pipelinev1.PipelineResourceSpec) (string, string, error) {
 		return "", "", fmt.Errorf("getRepoAndSHA failed: %w", err)
 	}
 
-	return repo, rev, nil
+	return strings.TrimSuffix(repo, ".git"), rev, nil
 }
 
 func getResourceParamByName(params []pipelinev1.ResourceParam, name string) (string, error) {

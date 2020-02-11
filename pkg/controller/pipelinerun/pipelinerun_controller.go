@@ -114,7 +114,7 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 
 	client := r.scmFactory(secret)
 	commitStatusInput := getCommitStatusInput(pipelineRun)
-	reqLogger.Info("creating a github status for", "resource", res, "status", commitStatusInput)
+	reqLogger.Info("creating a github status for", "resource", res, "status", commitStatusInput, "repo", repo, "sha", sha)
 	s, _, err := client.Repositories.CreateStatus(ctx, repo, sha, commitStatusInput)
 	if err != nil {
 		return reconcile.Result{}, err
