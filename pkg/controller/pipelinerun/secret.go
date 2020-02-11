@@ -11,7 +11,7 @@ import (
 
 const (
 	// TODO: what should these be called?
-	secretName = "github-auth"
+	secretName = "commit-status-tracker-git-secret"
 	secretID   = "token"
 )
 

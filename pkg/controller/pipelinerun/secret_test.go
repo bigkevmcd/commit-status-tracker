@@ -36,7 +36,7 @@ func TestGetAuthSecretWithNoSecret(t *testing.T) {
 	cl := fake.NewFakeClient(objs...)
 	_, err := getAuthSecret(cl, testNamespace)
 
-	wantErr := "error getting secret 'github-auth' in namespace 'test-namespace':.* not found"
+	wantErr := "error getting secret 'commit-status-tracker-git-secret' in namespace 'test-namespace':.* not found"
 	if !matchError(t, wantErr, err) {
 		t.Fatalf("failed to match error when no secret: got %s, want %s", err, wantErr)
 	}

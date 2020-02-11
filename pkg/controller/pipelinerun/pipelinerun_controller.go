@@ -79,7 +79,7 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	if !isNotifiablePipelineRun(pipelineRun) {
-		reqLogger.Info("not a notifable pipeline run")
+		reqLogger.Info("not a notifiable pipeline run")
 		return reconcile.Result{}, nil
 	}
 
@@ -87,17 +87,15 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	if err != nil {
 		reqLogger.Error(err, "failed to find a git resource")
 		return reconcile.Result{}, nil
-	} else {
-		reqLogger.Info("found a git resource", "resource", res)
 	}
+	reqLogger.Info("found a git resource", "resource", res)
 
 	repo, sha, err := getRepoAndSHA(res)
 	if err != nil {
 		reqLogger.Error(err, "failed to parse the URL and SHA correctly")
 		return reconcile.Result{}, nil
-	} else {
-		reqLogger.Info("found a git resource", "resource", res)
 	}
+	reqLogger.Info("found a git resource", "resource", res)
 
 	key := keyForCommit(repo, sha)
 	status := getPipelineRunState(pipelineRun)

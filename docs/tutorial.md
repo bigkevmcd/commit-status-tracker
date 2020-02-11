@@ -25,7 +25,7 @@ $ echo -n <paste token> > $HOME/Downloads/token
 ```
 
 ```shell
-$ kubectl create secret generic github-auth --from-file=$HOME/Downloads/token
+$ kubectl create secret generic commit-status-tracker-git-secret --from-file=$HOME/Downloads/token
 ```
 
 ## Annotating a PipelineRun
