@@ -13,7 +13,7 @@ Create a secret from your GitHub auth token, this command assumes a token is in 
 
 Visit https://github.com/settings/tokens/new and create a new personal token:
 
-![Token Creation](./token_creation.png)
+![Token Creation](./create_token.png)
 
 You'll need to enable the `repo:status` scope.
 
