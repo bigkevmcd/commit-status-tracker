@@ -11,6 +11,19 @@ And you'll need a GitHub auth token.
 
 Create a secret from your GitHub auth token, this command assumes a token is in `~/Downloads/token`.
 
+Visit https://github.com/settings/tokens/new and create a new personal token:
+
+![Token Creation](./token_creation.png)
+
+You'll need to enable the `repo:status` scope.
+
+Click to generate the token, and use the following command to write it to a
+file:
+
+```shell
+$ echo -n <paste token> > $HOME/Downloads/token
+```
+
 ```shell
 $ kubectl create secret generic github-auth --from-file=$HOME/Downloads/token
 ```
@@ -45,6 +58,8 @@ spec:
         - name: url
           value: https://github.com/this/repo
 ```
+
+The revision here should be the full commit SHA from the HEAD of a branch associated with a Pull Request.
 
 The annotations are:
 
