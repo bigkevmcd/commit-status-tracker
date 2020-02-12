@@ -20,7 +20,6 @@ want Tasks, but that's implemented yet).
 
 ## Prerequisites
 
-- [dep][dep_tool] version v0.5.0+.
 - [go][go_tool] version v1.12+.
 - [docker][docker_tool] version 17.03+
 - [kubectl][kubectl_tool] v1.11.3+
