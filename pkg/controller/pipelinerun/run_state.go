@@ -33,3 +33,7 @@ func (p pipelineRunWrapper) RunState() tracker.State {
 	}
 	return tracker.Pending
 }
+
+func (p pipelineRunWrapper) Annotations() map[string]string {
+	return p.PipelineRun.Annotations
+}

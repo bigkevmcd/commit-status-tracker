@@ -1,18 +1,15 @@
 package tracker
 
 import (
-	"math/rand"
 	"reflect"
 	"testing"
 
-	tb "github.com/tektoncd/pipeline/test/builder"
-	"knative.dev/pkg/apis"
-
+	"github.com/bigkevmcd/commit-status-tracker/test"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
 
 func TestFindGitResourceWithNoRepository(t *testing.T) {
-	pipelineRun := makePipelineRunWithResources()
+	pipelineRun := test.MakePipelineRunWithResources()
 
 	_, err := FindGitResource(pipelineRun)
 	if err == nil {
@@ -21,8 +18,8 @@ func TestFindGitResourceWithNoRepository(t *testing.T) {
 }
 
 func TestFindGitResourceWithRepository(t *testing.T) {
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 
 	want := &pipelinev1.PipelineResourceSpec{
 		Type: "git",
@@ -48,9 +45,9 @@ func TestFindGitResourceWithRepository(t *testing.T) {
 }
 
 func TestFindGitResourceWithMultipleRepositories(t *testing.T) {
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
-		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
+		test.MakeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
 
 	_, err := FindGitResource(pipelineRun)
 	if err == nil {
@@ -59,8 +56,8 @@ func TestFindGitResourceWithMultipleRepositories(t *testing.T) {
 }
 
 func TestFindGitResourceWithNonGitResource(t *testing.T) {
-	pipelineRun := makePipelineRunWithResources(
-		makeImageResourceBinding("example.com/project/myimage"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeImageResourceBinding("example.com/project/myimage"))
 
 	_, err := FindGitResource(pipelineRun)
 	if err == nil {
@@ -87,7 +84,7 @@ func TestGetRepoAndSHA(t *testing.T) {
 	}
 
 	for _, tt := range resourceTests {
-		res := makePipelineResource(tt.resType, tt.url, tt.revision)
+		res := test.MakePipelineResource(tt.resType, tt.url, tt.revision)
 
 		repo, sha, err := GetRepoAndSHA(res)
 		if !matchError(t, tt.wantErr, err) {
@@ -128,70 +125,4 @@ func TestExtractRepoFromGitHubURL(t *testing.T) {
 			t.Errorf("GetRepoAndSHA() %s: got repo %s, want %s", tt.name, repo, tt.repo)
 		}
 	}
-}
-
-func makePipelineRunWithResources(opts ...tb.PipelineRunSpecOp) *pipelinev1.PipelineRun {
-	return tb.PipelineRun(pipelineRunName, testNamespace, tb.PipelineRunSpec(
-		"tomatoes", opts...,
-	), tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
-		apis.Condition{Type: apis.ConditionSucceeded}),
-		tb.PipelineRunTaskRunsStatus("trname", &pipelinev1.PipelineRunTaskRunStatus{
-			PipelineTaskName: "task-1",
-		}),
-	), tb.PipelineRunLabel("label-key", "label-value"))
-}
-
-func makeGitResourceBinding(url, rev string) tb.PipelineRunSpecOp {
-	return tb.PipelineRunResourceBinding("some-resource"+randomSuffix(),
-		tb.PipelineResourceBindingResourceSpec(&pipelinev1.PipelineResourceSpec{
-			Type: pipelinev1.PipelineResourceTypeGit,
-			Params: []pipelinev1.ResourceParam{{
-				Name:  "url",
-				Value: url,
-			}, {
-				Name:  "revision",
-				Value: rev,
-			}}}))
-}
-
-func makeImageResourceBinding(url string) tb.PipelineRunSpecOp {
-	return tb.PipelineRunResourceBinding("some-resource"+randomSuffix(),
-		tb.PipelineResourceBindingResourceSpec(&pipelinev1.PipelineResourceSpec{
-			Type: pipelinev1.PipelineResourceTypeImage,
-			Params: []pipelinev1.ResourceParam{{
-				Name:  "url",
-				Value: url,
-			},
-			}}))
-}
-
-func makePipelineResource(resType pipelinev1.PipelineResourceType, url, rev string) *pipelinev1.PipelineResourceSpec {
-	spec := &pipelinev1.PipelineResourceSpec{
-		Type: resType,
-	}
-	if url != "" {
-		spec.Params = append(spec.Params,
-			pipelinev1.ResourceParam{
-				Name:  "url",
-				Value: url,
-			})
-	}
-	if rev != "" {
-		spec.Params = append(spec.Params,
-			pipelinev1.ResourceParam{
-				Name:  "revision",
-				Value: rev,
-			})
-	}
-	return spec
-}
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-func randomSuffix() string {
-	b := make([]rune, 5)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
 }

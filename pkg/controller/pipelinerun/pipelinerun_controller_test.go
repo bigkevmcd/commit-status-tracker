@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/bigkevmcd/commit-status-tracker/pkg/controller/tracker"
+	"github.com/bigkevmcd/commit-status-tracker/test"
 	"github.com/jenkins-x/go-scm/scm"
 	fakescm "github.com/jenkins-x/go-scm/scm/driver/fake"
 	corev1 "k8s.io/api/core/v1"
@@ -31,18 +33,18 @@ var _ reconcile.Reconciler = &ReconcilePipelineRun{}
 // fake client that tracks PipelineRun objects.
 func TestPipelineRunControllerPendingState(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
 		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
-		tb.PipelineRunAnnotation(statusContextName, "test-context"),
-		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunAnnotation(tracker.StatusContextName, "test-context"),
+		tb.PipelineRunAnnotation(tracker.StatusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
 	objs := []runtime.Object{
 		pipelineRun,
-		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+		test.MakeSecret(tracker.SecretName, map[string][]byte{"token": []byte(testToken)}),
 	}
 	r, data := makeReconciler(pipelineRun, objs...)
 
@@ -68,18 +70,18 @@ func TestPipelineRunControllerPendingState(t *testing.T) {
 // we've already sent a pending notification.
 func TestPipelineRunReconcileWithPreviousPending(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
 		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
-		tb.PipelineRunAnnotation(statusContextName, "test-context"),
-		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunAnnotation(tracker.StatusContextName, "test-context"),
+		tb.PipelineRunAnnotation(tracker.StatusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
 	objs := []runtime.Object{
 		pipelineRun,
-		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+		test.MakeSecret(tracker.SecretName, map[string][]byte{"token": []byte(testToken)}),
 	}
 
 	r, data := makeReconciler(pipelineRun, objs...)
@@ -114,18 +116,18 @@ func TestPipelineRunReconcileWithPreviousPending(t *testing.T) {
 // fake client that tracks PipelineRun objects.
 func TestPipelineRunControllerSuccessState(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
 		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
-		tb.PipelineRunAnnotation(statusContextName, "test-context"),
-		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunAnnotation(tracker.StatusContextName, "test-context"),
+		tb.PipelineRunAnnotation(tracker.StatusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionTrue})))
 	objs := []runtime.Object{
 		pipelineRun,
-		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+		test.MakeSecret(tracker.SecretName, map[string][]byte{"token": []byte(testToken)}),
 	}
 	r, data := makeReconciler(pipelineRun, objs...)
 
@@ -151,18 +153,18 @@ func TestPipelineRunControllerSuccessState(t *testing.T) {
 // fake client that tracks PipelineRun objects.
 func TestPipelineRunControllerFailedState(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
 		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
-		tb.PipelineRunAnnotation(statusContextName, "test-context"),
-		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunAnnotation(tracker.StatusContextName, "test-context"),
+		tb.PipelineRunAnnotation(tracker.StatusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionFalse})))
 	objs := []runtime.Object{
 		pipelineRun,
-		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+		test.MakeSecret(tracker.SecretName, map[string][]byte{"token": []byte(testToken)}),
 	}
 	r, data := makeReconciler(pipelineRun, objs...)
 
@@ -188,15 +190,15 @@ func TestPipelineRunControllerFailedState(t *testing.T) {
 // PipelineRun.
 func TestPipelineRunReconcileNonNotifiable(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
 	objs := []runtime.Object{
 		pipelineRun,
-		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+		test.MakeSecret(tracker.SecretName, map[string][]byte{"token": []byte(testToken)}),
 	}
 	r, data := makeReconciler(pipelineRun, objs...)
 
@@ -218,17 +220,17 @@ func TestPipelineRunReconcileNonNotifiable(t *testing.T) {
 // with no "git" resource.
 func TestPipelineRunReconcileWithNoGitRepository(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	pipelineRun := makePipelineRunWithResources()
+	pipelineRun := test.MakePipelineRunWithResources()
 	applyOpts(
 		pipelineRun,
 		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
-		tb.PipelineRunAnnotation(statusContextName, "test-context"),
-		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunAnnotation(tracker.StatusContextName, "test-context"),
+		tb.PipelineRunAnnotation(tracker.StatusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
 	objs := []runtime.Object{
 		pipelineRun,
-		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+		test.MakeSecret(tracker.SecretName, map[string][]byte{"token": []byte(testToken)}),
 	}
 	r, data := makeReconciler(pipelineRun, objs...)
 
@@ -250,9 +252,9 @@ func TestPipelineRunReconcileWithNoGitRepository(t *testing.T) {
 // with multiple "git" resources.
 func TestPipelineRunReconcileWithGitRepositories(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
-		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
+		test.MakeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
 	applyOpts(
 		pipelineRun,
 		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
@@ -262,7 +264,7 @@ func TestPipelineRunReconcileWithGitRepositories(t *testing.T) {
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
 	objs := []runtime.Object{
 		pipelineRun,
-		makeSecret(map[string][]byte{"token": []byte(testToken)}),
+		test.MakeSecret(tracker.SecretName, map[string][]byte{"token": []byte(testToken)}),
 	}
 	r, data := makeReconciler(pipelineRun, objs...)
 
@@ -284,14 +286,14 @@ func TestPipelineRunReconcileWithGitRepositories(t *testing.T) {
 // with a "git" resource, but with no Git credentials.
 func TestPipelineRunReconcileWithNoGitCredentials(t *testing.T) {
 	logf.SetLogger(logf.ZapLogger(true))
-	pipelineRun := makePipelineRunWithResources(
-		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
-		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
+	pipelineRun := test.MakePipelineRunWithResources(
+		test.MakeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
+		test.MakeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
 	applyOpts(
 		pipelineRun,
 		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
-		tb.PipelineRunAnnotation(statusContextName, "test-context"),
-		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
+		tb.PipelineRunAnnotation(tracker.StatusContextName, "test-context"),
+		tb.PipelineRunAnnotation(tracker.StatusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
 	objs := []runtime.Object{pipelineRun}

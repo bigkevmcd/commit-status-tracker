@@ -11,7 +11,7 @@ import (
 
 const (
 	// TODO: what should these be called?
-	secretName = "commit-status-tracker-git-secret"
+	SecretName = "commit-status-tracker-git-secret"
 	secretID   = "token"
 )
 
@@ -23,7 +23,7 @@ func GetAuthSecret(c client.Client, ns string) (string, error) {
 	secret := &corev1.Secret{}
 	err := c.Get(context.TODO(), getNamespaceSecretName(ns), secret)
 	if err != nil {
-		return "", fmt.Errorf("failed to GetAuthSecret, error getting secret '%s' in namespace '%s': '%q'", secretName, ns, err)
+		return "", fmt.Errorf("failed to GetAuthSecret, error getting secret '%s' in namespace '%s': '%q'", SecretName, ns, err)
 	}
 
 	tokenData, ok := secret.Data[secretID]
@@ -36,7 +36,7 @@ func GetAuthSecret(c client.Client, ns string) (string, error) {
 func getNamespaceSecretName(s string) types.NamespacedName {
 	return types.NamespacedName{
 		Namespace: s,
-		Name:      secretName,
+		Name:      SecretName,
 	}
 
 }

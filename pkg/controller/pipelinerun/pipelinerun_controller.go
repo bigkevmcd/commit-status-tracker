@@ -103,8 +103,10 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	}
 	reqLogger.Info("found a git resource", "resource", res)
 
+	w := pipelineRunWrapper{pipelineRun}
+
 	key := keyForCommit(repo, sha)
-	status := getPipelineRunState(pipelineRun)
+	status := w.RunState()
 	last, ok := r.pipelineRuns[key]
 	if ok {
 		if status == last {
@@ -119,7 +121,7 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	client := r.scmFactory(secret)
-	commitStatusInput := getCommitStatusInput(pipelineRun)
+	commitStatusInput := tracker.GetCommitStatusInput(w)
 	reqLogger.Info("creating a github status for", "resource", res, "status", commitStatusInput, "repo", repo, "sha", sha)
 	s, _, err := client.Repositories.CreateStatus(ctx, repo, sha, commitStatusInput)
 	if err != nil {

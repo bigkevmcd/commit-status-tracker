@@ -9,13 +9,13 @@ type stateHelper interface {
 	Annotations() map[string]string
 }
 
-// getCommitStatusInput extracts the various bits from a PipelineRun and
+// GetCommitStatusInput extracts the various bits from a PipelineRun and
 // returns a status record for submitting to the upstream Git Hosting
 // Service.
 //
 // See https://developer.github.com/v3/repos/statuses/#create-a-status and
 // https://github.com/jenkins-x/go-scm/blob/b48d209334ed7b167bad3326a481ae3964c7c1a1/scm/repo.go#L88
-func getCommitStatusInput(r stateHelper) *scm.StatusInput {
+func GetCommitStatusInput(r stateHelper) *scm.StatusInput {
 	return &scm.StatusInput{
 		State:  convertState(r.RunState()),
 		Label:  getAnnotationByName(r, StatusContextName, "default"),
