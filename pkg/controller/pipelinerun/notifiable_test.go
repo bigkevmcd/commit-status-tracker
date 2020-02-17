@@ -3,6 +3,7 @@ package pipelinerun
 import (
 	"testing"
 
+	"github.com/bigkevmcd/commit-status-tracker/pkg/controller/tracker"
 	tb "github.com/tektoncd/pipeline/test/builder"
 )
 
@@ -14,8 +15,8 @@ func TestIsNotifiablePipelineRun(t *testing.T) {
 	}{
 		{"no labels", nil, false},
 		{"no notifiable label", []tb.PipelineRunOp{tb.PipelineRunAnnotation("testing", "app")}, false},
-		{"notifiable label", []tb.PipelineRunOp{tb.PipelineRunAnnotation(notifiableName, "true")}, true},
-		{"notifiable label is false", []tb.PipelineRunOp{tb.PipelineRunAnnotation(notifiableName, "false")}, false},
+		{"notifiable label", []tb.PipelineRunOp{tb.PipelineRunAnnotation(tracker.NotifiableName, "true")}, true},
+		{"notifiable label is false", []tb.PipelineRunOp{tb.PipelineRunAnnotation(tracker.NotifiableName, "false")}, false},
 	}
 
 	for _, tt := range nt {

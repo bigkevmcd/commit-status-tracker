@@ -1,4 +1,4 @@
-package pipelinerun
+package taskrun
 
 import (
 	"context"
@@ -15,11 +15,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/bigkevmcd/commit-status-tracker/pkg/controller/tracker"
 	pipelinesv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
 
-var log = logf.Log.WithName("controller_pipelinerun")
+var log = logf.Log.WithName("controller_taskrun")
 
 // Add creates a new PipelineRun Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -28,21 +27,16 @@ func Add(mgr manager.Manager) error {
 }
 
 // used as an in-memory store to track pending runs.
-type pipelineRunTracker map[string]tracker.State
+type pipelineRunTracker map[string]State
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcilePipelineRun{
-		client:       mgr.GetClient(),
-		scheme:       mgr.GetScheme(),
-		scmFactory:   tracker.CreateSCMClient,
-		pipelineRuns: make(pipelineRunTracker),
-	}
+	return &ReconcilePipelineRun{client: mgr.GetClient(), scheme: mgr.GetScheme(), scmFactory: createClient, pipelineRuns: make(pipelineRunTracker)}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	c, err := controller.New("pipelinerun-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("taskrun-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
@@ -60,7 +54,7 @@ type ReconcilePipelineRun struct {
 	// that reads objects from the cache and writes to the apiserver
 	client       client.Client
 	scheme       *runtime.Scheme
-	scmFactory   tracker.SCMClientFactory
+	scmFactory   scmClientFactory
 	pipelineRuns pipelineRunTracker
 }
 
@@ -89,14 +83,14 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, nil
 	}
 
-	res, err := tracker.FindGitResource(pipelineRun)
+	res, err := findGitResource(pipelineRun)
 	if err != nil {
 		reqLogger.Error(err, "failed to find a git resource")
 		return reconcile.Result{}, nil
 	}
 	reqLogger.Info("found a git resource", "resource", res)
 
-	repo, sha, err := tracker.GetRepoAndSHA(res)
+	repo, sha, err := getRepoAndSHA(res)
 	if err != nil {
 		reqLogger.Error(err, "failed to parse the URL and SHA correctly")
 		return reconcile.Result{}, nil
@@ -112,7 +106,7 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		}
 	}
 
-	secret, err := tracker.GetAuthSecret(r.client, request.Namespace)
+	secret, err := getAuthSecret(r.client, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to get an authSecret")
 		return reconcile.Result{}, nil

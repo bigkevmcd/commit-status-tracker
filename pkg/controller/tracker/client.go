@@ -1,4 +1,4 @@
-package pipelinerun
+package tracker
 
 import (
 	"context"
@@ -8,10 +8,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type scmClientFactory func(string) *scm.Client
+type SCMClientFactory func(string) *scm.Client
 
 // TODO: fix this to determine the type of scm Client to create.
-func createClient(token string) *scm.Client {
+func CreateSCMClient(token string) *scm.Client {
 	client := github.NewDefault()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},

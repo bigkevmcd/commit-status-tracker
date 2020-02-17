@@ -1,4 +1,4 @@
-package pipelinerun
+package tracker
 
 import (
 	"math/rand"
@@ -14,7 +14,7 @@ import (
 func TestFindGitResourceWithNoRepository(t *testing.T) {
 	pipelineRun := makePipelineRunWithResources()
 
-	_, err := findGitResource(pipelineRun)
+	_, err := FindGitResource(pipelineRun)
 	if err == nil {
 		t.Fatal("did not get an error with no git resource")
 	}
@@ -38,7 +38,7 @@ func TestFindGitResourceWithRepository(t *testing.T) {
 		},
 	}
 
-	r, err := findGitResource(pipelineRun)
+	r, err := FindGitResource(pipelineRun)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestFindGitResourceWithMultipleRepositories(t *testing.T) {
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"),
 		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
 
-	_, err := findGitResource(pipelineRun)
+	_, err := FindGitResource(pipelineRun)
 	if err == nil {
 		t.Fatal("did not get an error with no git resource")
 	}
@@ -62,7 +62,7 @@ func TestFindGitResourceWithNonGitResource(t *testing.T) {
 	pipelineRun := makePipelineRunWithResources(
 		makeImageResourceBinding("example.com/project/myimage"))
 
-	_, err := findGitResource(pipelineRun)
+	_, err := FindGitResource(pipelineRun)
 	if err == nil {
 		t.Fatal("did not get an error with no git resource")
 	}
@@ -89,18 +89,18 @@ func TestGetRepoAndSHA(t *testing.T) {
 	for _, tt := range resourceTests {
 		res := makePipelineResource(tt.resType, tt.url, tt.revision)
 
-		repo, sha, err := getRepoAndSHA(res)
+		repo, sha, err := GetRepoAndSHA(res)
 		if !matchError(t, tt.wantErr, err) {
-			t.Errorf("getRepoAndSHA() %s: got error %v, want %s", tt.name, err, tt.wantErr)
+			t.Errorf("GetRepoAndSHA() %s: got error %v, want %s", tt.name, err, tt.wantErr)
 			continue
 		}
 
 		if tt.repo != repo {
-			t.Errorf("getRepoAndSHA() %s: got repo %s, want %s", tt.name, repo, tt.repo)
+			t.Errorf("GetRepoAndSHA() %s: got repo %s, want %s", tt.name, repo, tt.repo)
 		}
 
 		if tt.sha != sha {
-			t.Errorf("getRepoAndSHA() %s: got SHA %s, want %s", tt.name, sha, tt.sha)
+			t.Errorf("GetRepoAndSHA() %s: got SHA %s, want %s", tt.name, sha, tt.sha)
 		}
 	}
 }
@@ -125,7 +125,7 @@ func TestExtractRepoFromGitHubURL(t *testing.T) {
 		}
 
 		if tt.repo != repo {
-			t.Errorf("getRepoAndSHA() %s: got repo %s, want %s", tt.name, repo, tt.repo)
+			t.Errorf("GetRepoAndSHA() %s: got repo %s, want %s", tt.name, repo, tt.repo)
 		}
 	}
 }

@@ -1,4 +1,4 @@
-package pipelinerun
+package taskrun
 
 import (
 	"reflect"
@@ -35,7 +35,7 @@ func TestPipelineRunControllerPendingState(t *testing.T) {
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
-		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
+		tb.PipelineRunAnnotation(notifiableName, "true"),
 		tb.PipelineRunAnnotation(statusContextName, "test-context"),
 		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
@@ -72,7 +72,7 @@ func TestPipelineRunReconcileWithPreviousPending(t *testing.T) {
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
-		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
+		tb.PipelineRunAnnotation(notifiableName, "true"),
 		tb.PipelineRunAnnotation(statusContextName, "test-context"),
 		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
@@ -118,7 +118,7 @@ func TestPipelineRunControllerSuccessState(t *testing.T) {
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
-		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
+		tb.PipelineRunAnnotation(notifiableName, "true"),
 		tb.PipelineRunAnnotation(statusContextName, "test-context"),
 		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
@@ -155,7 +155,7 @@ func TestPipelineRunControllerFailedState(t *testing.T) {
 		makeGitResourceBinding("https://github.com/tektoncd/triggers", "master"))
 	applyOpts(
 		pipelineRun,
-		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
+		tb.PipelineRunAnnotation(notifiableName, "true"),
 		tb.PipelineRunAnnotation(statusContextName, "test-context"),
 		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
@@ -221,7 +221,7 @@ func TestPipelineRunReconcileWithNoGitRepository(t *testing.T) {
 	pipelineRun := makePipelineRunWithResources()
 	applyOpts(
 		pipelineRun,
-		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
+		tb.PipelineRunAnnotation(notifiableName, "true"),
 		tb.PipelineRunAnnotation(statusContextName, "test-context"),
 		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
@@ -255,9 +255,9 @@ func TestPipelineRunReconcileWithGitRepositories(t *testing.T) {
 		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
 	applyOpts(
 		pipelineRun,
-		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
-		tb.PipelineRunAnnotation(tracker.StatusContextName, "test-context"),
-		tb.PipelineRunAnnotation(tracker.StatusDescriptionName, "testing"),
+		tb.PipelineRunAnnotation(notifiableName, "true"),
+		tb.PipelineRunAnnotation(statusContextName, "test-context"),
+		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(
 			apis.Condition{Type: apis.ConditionSucceeded, Status: corev1.ConditionUnknown})))
 	objs := []runtime.Object{
@@ -289,7 +289,7 @@ func TestPipelineRunReconcileWithNoGitCredentials(t *testing.T) {
 		makeGitResourceBinding("https://github.com/tektoncd/pipeline", "master"))
 	applyOpts(
 		pipelineRun,
-		tb.PipelineRunAnnotation(tracker.NotifiableName, "true"),
+		tb.PipelineRunAnnotation(notifiableName, "true"),
 		tb.PipelineRunAnnotation(statusContextName, "test-context"),
 		tb.PipelineRunAnnotation(statusDescriptionName, "testing"),
 		tb.PipelineRunStatus(tb.PipelineRunStatusCondition(

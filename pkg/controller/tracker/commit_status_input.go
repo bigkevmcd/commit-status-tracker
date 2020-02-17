@@ -1,10 +1,13 @@
-package pipelinerun
+package tracker
 
 import (
 	"github.com/jenkins-x/go-scm/scm"
-
-	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
+
+type stateHelper interface {
+	RunState() State
+	Annotations() map[string]string
+}
 
 // getCommitStatusInput extracts the various bits from a PipelineRun and
 // returns a status record for submitting to the upstream Git Hosting
@@ -12,17 +15,17 @@ import (
 //
 // See https://developer.github.com/v3/repos/statuses/#create-a-status and
 // https://github.com/jenkins-x/go-scm/blob/b48d209334ed7b167bad3326a481ae3964c7c1a1/scm/repo.go#L88
-func getCommitStatusInput(pr *pipelinev1.PipelineRun) *scm.StatusInput {
+func getCommitStatusInput(r stateHelper) *scm.StatusInput {
 	return &scm.StatusInput{
-		State:  convertState(getPipelineRunState(pr)),
-		Label:  getAnnotationByName(pr, statusContextName, "default"),
-		Desc:   getAnnotationByName(pr, statusDescriptionName, ""),
-		Target: getAnnotationByName(pr, statusTargetURLName, ""),
+		State:  convertState(r.RunState()),
+		Label:  getAnnotationByName(r, StatusContextName, "default"),
+		Desc:   getAnnotationByName(r, StatusDescriptionName, ""),
+		Target: getAnnotationByName(r, StatusTargetURLName, ""),
 	}
 }
 
-func getAnnotationByName(pr *pipelinev1.PipelineRun, name, def string) string {
-	for k, v := range pr.Annotations {
+func getAnnotationByName(r stateHelper, name, def string) string {
+	for k, v := range r.Annotations() {
 		if k == name {
 			return v
 		}

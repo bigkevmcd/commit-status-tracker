@@ -1,6 +1,7 @@
 package pipelinerun
 
 import (
+	"github.com/bigkevmcd/commit-status-tracker/pkg/controller/tracker"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
 
@@ -8,7 +9,7 @@ import (
 // completion status as a GitHub status.
 func isNotifiablePipelineRun(pr *pipelinev1.PipelineRun) bool {
 	for k, v := range pr.Annotations {
-		if k == notifiableName && v == "true" {
+		if k == tracker.NotifiableName && v == "true" {
 			return true
 		}
 	}

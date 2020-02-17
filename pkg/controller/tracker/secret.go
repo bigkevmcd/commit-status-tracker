@@ -1,4 +1,4 @@
-package pipelinerun
+package tracker
 
 import (
 	"context"
@@ -15,16 +15,20 @@ const (
 	secretID   = "token"
 )
 
-func getAuthSecret(c client.Client, ns string) (string, error) {
+// GetAuthSecret attempts to find a Secret in the provided namespace, using the
+// client.
+//
+// Returns the string of the secret if found, otherwise returns an error.
+func GetAuthSecret(c client.Client, ns string) (string, error) {
 	secret := &corev1.Secret{}
 	err := c.Get(context.TODO(), getNamespaceSecretName(ns), secret)
 	if err != nil {
-		return "", fmt.Errorf("failed to getAuthSecret, error getting secret '%s' in namespace '%s': '%q'", secretName, ns, err)
+		return "", fmt.Errorf("failed to GetAuthSecret, error getting secret '%s' in namespace '%s': '%q'", secretName, ns, err)
 	}
 
 	tokenData, ok := secret.Data[secretID]
 	if !ok {
-		return "", fmt.Errorf("failed to getAuthSecret, secret %s does not have a 'token' key", ns)
+		return "", fmt.Errorf("failed to GetAuthSecret, secret %s does not have a 'token' key", ns)
 	}
 	return string(tokenData), nil
 }
