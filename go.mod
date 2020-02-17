@@ -11,7 +11,6 @@ require (
 	github.com/operator-framework/operator-sdk v0.14.0
 	github.com/spf13/pflag v1.0.5
 	github.com/tektoncd/pipeline v0.9.2
-	go.uber.org/zap v1.10.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
