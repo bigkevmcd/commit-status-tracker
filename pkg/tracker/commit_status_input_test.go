@@ -34,3 +34,7 @@ func (fo fakeObject) Annotations() map[string]string {
 func (fo fakeObject) RunState() State {
 	return Pending
 }
+
+func (fo fakeObject) FindCommit() (*Commit, error) {
+	return nil, nil
+}

@@ -4,18 +4,13 @@ import (
 	"github.com/jenkins-x/go-scm/scm"
 )
 
-type stateHelper interface {
-	RunState() State
-	Annotations() map[string]string
-}
-
 // GetCommitStatusInput extracts the various bits from a PipelineRun and
 // returns a status record for submitting to the upstream Git Hosting
 // Service.
 //
 // See https://developer.github.com/v3/repos/statuses/#create-a-status and
 // https://github.com/jenkins-x/go-scm/blob/b48d209334ed7b167bad3326a481ae3964c7c1a1/scm/repo.go#L88
-func GetCommitStatusInput(r stateHelper) *scm.StatusInput {
+func GetCommitStatusInput(r trackableResource) *scm.StatusInput {
 	return &scm.StatusInput{
 		State:  convertState(r.RunState()),
 		Label:  getAnnotationByName(r, StatusContextName, "default"),
@@ -24,7 +19,7 @@ func GetCommitStatusInput(r stateHelper) *scm.StatusInput {
 	}
 }
 
-func getAnnotationByName(r stateHelper, name, def string) string {
+func getAnnotationByName(r trackableResource, name, def string) string {
 	for k, v := range r.Annotations() {
 		if k == name {
 			return v

@@ -8,6 +8,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// SCMClientFactory implementations create clients with the
+// correct authentication.
+//
+// TODO: this should accept a URL and use the factory mechanism in go-scm to
+// create the correct scm.Client.
 type SCMClientFactory func(string) *scm.Client
 
 // TODO: fix this to determine the type of scm Client to create.

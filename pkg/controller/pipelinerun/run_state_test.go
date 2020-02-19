@@ -6,7 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
 
-	"github.com/bigkevmcd/commit-status-tracker/pkg/controller/tracker"
+	"github.com/bigkevmcd/commit-status-tracker/pkg/tracker"
 	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	tb "github.com/tektoncd/pipeline/test/builder"
 )

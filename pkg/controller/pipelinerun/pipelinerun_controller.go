@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/bigkevmcd/commit-status-tracker/pkg/controller/tracker"
+	"github.com/bigkevmcd/commit-status-tracker/pkg/tracker"
 	pipelinesv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
 
@@ -84,28 +84,24 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	if !isNotifiablePipelineRun(pipelineRun) {
+	w := wrap(pipelineRun)
+	if !tracker.IsNotifiable(w) {
 		reqLogger.Info("not a notifiable pipeline run")
 		return reconcile.Result{}, nil
 	}
 
-	res, err := tracker.FindGitResource(pipelineRun)
+	res, err := w.FindCommit()
 	if err != nil {
 		reqLogger.Error(err, "failed to find a git resource")
 		return reconcile.Result{}, nil
 	}
 	reqLogger.Info("found a git resource", "resource", res)
 
-	repo, sha, err := tracker.GetRepoAndSHA(res)
+	repo, err := res.Repo()
 	if err != nil {
-		reqLogger.Error(err, "failed to parse the URL and SHA correctly")
-		return reconcile.Result{}, nil
+		reqLogger.Error(err, "could not parse git repository into a repo")
 	}
-	reqLogger.Info("found a git resource", "resource", res)
-
-	w := pipelineRunWrapper{pipelineRun}
-
-	key := keyForCommit(repo, sha)
+	key := keyForCommit(repo, res.Ref)
 	status := w.RunState()
 	last, ok := r.pipelineRuns[key]
 	if ok {
@@ -120,10 +116,11 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, nil
 	}
 
+	// TODO: this should be using the URL.
 	client := r.scmFactory(secret)
 	commitStatusInput := tracker.GetCommitStatusInput(w)
-	reqLogger.Info("creating a github status for", "resource", res, "status", commitStatusInput, "repo", repo, "sha", sha)
-	s, _, err := client.Repositories.CreateStatus(ctx, repo, sha, commitStatusInput)
+	reqLogger.Info("creating a github status for", "resource", res, "status", commitStatusInput, "repo", repo, "sha", res.Ref)
+	s, _, err := client.Repositories.CreateStatus(ctx, repo, res.Ref, commitStatusInput)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -132,8 +129,8 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	return reconcile.Result{}, nil
 }
 
-func keyForCommit(repo, sha string) string {
-	return sha1String(fmt.Sprintf("%s:%s", repo, sha))
+func keyForCommit(repo, ref string) string {
+	return sha1String(fmt.Sprintf("%s:%s", repo, ref))
 }
 
 func sha1String(s string) string {
