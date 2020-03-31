@@ -1,4 +1,4 @@
-package pipelinerun
+package taskrun
 
 import (
 	"context"
@@ -16,67 +16,67 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/bigkevmcd/commit-status-tracker/pkg/tracker"
-	pipelinesv1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 )
 
-var log = logf.Log.WithName("controller_pipelinerun")
+var log = logf.Log.WithName("controller_taskrun")
 
-// Add creates a new PipelineRun Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new TaskRun Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
 }
 
 // used as an in-memory store to track pending runs.
-type pipelineRunTracker map[string]tracker.State
+type taskRunTracker map[string]tracker.State
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcilePipelineRun{
-		client:       mgr.GetClient(),
-		scheme:       mgr.GetScheme(),
-		scmFactory:   tracker.CreateSCMClient,
-		pipelineRuns: make(pipelineRunTracker),
+	return &ReconcileTaskRun{
+		client:     mgr.GetClient(),
+		scheme:     mgr.GetScheme(),
+		scmFactory: tracker.CreateSCMClient,
+		taskRuns:   make(taskRunTracker),
 	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	c, err := controller.New("pipelinerun-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("taskrun-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &pipelinesv1alpha1.PipelineRun{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &pipelinev1.TaskRun{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// ReconcilePipelineRun reconciles a PipelineRun object
-type ReconcilePipelineRun struct {
+// ReconcileTaskRun reconciles a TaskRun object
+type ReconcileTaskRun struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client       client.Client
-	scheme       *runtime.Scheme
-	scmFactory   tracker.SCMClientFactory
-	pipelineRuns pipelineRunTracker
+	client     client.Client
+	scheme     *runtime.Scheme
+	scmFactory tracker.SCMClientFactory
+	taskRuns   taskRunTracker
 }
 
-// Reconcile reads that state of the cluster for a PipelineRun object and makes changes based on the state read
-// and what is in the PipelineRun.Spec
+// Reconcile reads that state of the cluster for a TaskRun object and makes changes based on the state read
+// and what is in the TaskRun.Spec
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileTaskRun) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling PipelineRun")
+	reqLogger.Info("Reconciling TaskRun")
 	ctx := context.Background()
 
-	// Fetch the PipelineRun instance
-	pipelineRun := &pipelinesv1alpha1.PipelineRun{}
-	err := r.client.Get(ctx, request.NamespacedName, pipelineRun)
+	// Fetch the TaskRun instance
+	taskRun := &pipelinev1.TaskRun{}
+	err := r.client.Get(ctx, request.NamespacedName, taskRun)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -84,9 +84,9 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	w := wrap(pipelineRun)
+	w := wrap(taskRun)
 	if !tracker.IsNotifiable(w) {
-		reqLogger.Info("not a notifiable pipeline run")
+		reqLogger.Info("not a notifiable task run")
 		return reconcile.Result{}, nil
 	}
 
@@ -100,10 +100,11 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	repo, err := res.Repo()
 	if err != nil {
 		reqLogger.Error(err, "could not parse git repository into a repo")
+		return reconcile.Result{}, err
 	}
 	key := keyForCommit(repo, res.Ref)
 	status := w.RunState()
-	last, ok := r.pipelineRuns[key]
+	last, ok := r.taskRuns[key]
 	if ok {
 		if status == last {
 			return reconcile.Result{}, nil
@@ -124,7 +125,7 @@ func (r *ReconcilePipelineRun) Reconcile(request reconcile.Request) (reconcile.R
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	r.pipelineRuns[key] = status
+	r.taskRuns[key] = status
 	reqLogger.Info("created a github status", "status", s)
 	return reconcile.Result{}, nil
 }

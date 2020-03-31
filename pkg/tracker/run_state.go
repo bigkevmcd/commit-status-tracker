@@ -1,10 +1,9 @@
-package pipelinerun
+package tracker
 
 import (
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/apis"
-
-	pipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 // State represents the state of a Pipeline.
@@ -26,13 +25,13 @@ func (s State) String() string {
 	return names[s]
 }
 
-// getPipelineRunState returns whether or not a PipelineRun was successful or
-// not.
+// ConditionToState processes a set of conditions looking for a
+// ConditionSucceeded and returns a commit-status compatible state for the run.
 //
 // It can return a Pending result if the task has not yet completed.
 // TODO: will likely need to work out if a task was killed OOM.
-func getPipelineRunState(p *pipelinev1.PipelineRun) State {
-	for _, c := range p.Status.Conditions {
+func ConditionsToState(conditions duckv1.Conditions) State {
+	for _, c := range conditions {
 		if c.Type == apis.ConditionSucceeded {
 			switch c.Status {
 			case
